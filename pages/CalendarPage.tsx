@@ -18,34 +18,28 @@ export const CalendarPage = () => {
   const [view, setView] = useState<ViewMode>('week');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Availability Finder State
   const [isFinderOpen, setIsFinderOpen] = useState(false);
   const [finderStaffId, setFinderStaffId] = useState<number | 'all'>('all');
   const [finderDuration, setFinderDuration] = useState('60');
   
-  // Selection States
   const [selectedDateForModal, setSelectedDateForModal] = useState<string | undefined>(undefined);
   const [selectedAppointmentForModal, setSelectedAppointmentForModal] = useState<Appointment | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<number | 'all'>('all');
   
-  // Drag State
   const [draggedAppointmentId, setDraggedAppointmentId] = useState<number | null>(null);
   
   const { appointments, customers, services, staff, updateAppointment } = useStore();
 
-  // --- Configuration ---
-  const startHour = 7; // Changed to 07:00
+  const startHour = 7; 
   const endHour = 23; 
-  // Generate time slots (30 min intervals)
   const timeSlots: string[] = [];
   for (let h = startHour; h < endHour; h++) {
     timeSlots.push(`${h.toString().padStart(2, '0')}:00`);
     timeSlots.push(`${h.toString().padStart(2, '0')}:30`);
   }
   
-  const rowHeight = 60; // Height for 30 mins (120px per hour)
+  const rowHeight = 60; 
 
-  // --- Date Calculations ---
   const daysToShow = useMemo(() => {
     if (view === 'day') {
       return [currentDate];
@@ -78,9 +72,6 @@ export const CalendarPage = () => {
     return '';
   }, [currentDate, view]);
 
-
-  // --- Logic Helpers ---
-
   const handleNavigate = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
       if (view === 'day') setCurrentDate(subDays(currentDate, 1));
@@ -109,14 +100,12 @@ export const CalendarPage = () => {
     return filteredAppointments.filter(apt => apt.date === dateStr);
   };
 
-  // Open modal for NEW appointment
   const handleDayClick = (date: Date) => {
     setSelectedDateForModal(format(date, 'yyyy-MM-dd'));
     setSelectedAppointmentForModal(null);
     setIsModalOpen(true);
   };
 
-  // Open modal for EXISTING appointment (Edit)
   const handleAppointmentDoubleClick = (e: React.MouseEvent, apt: Appointment) => {
     e.stopPropagation();
     setSelectedDateForModal(undefined);
@@ -124,24 +113,18 @@ export const CalendarPage = () => {
     setIsModalOpen(true);
   };
 
-  // --- Availability Logic (Mock) ---
-  // In a real app, this would query the backend. Here we simulate finding empty slots.
   const findAvailableSlots = () => {
     const suggestions = [];
-    const checkDays = [currentDate, addDays(currentDate, 1), addDays(currentDate, 2)]; // Check next 3 days
+    const checkDays = [currentDate, addDays(currentDate, 1), addDays(currentDate, 2)];
     
-    // Simulate finding 3 slots
     for (const day of checkDays) {
         const dayStr = format(day, 'yyyy-MM-dd');
         const dayName = format(day, 'EEEE', { locale: tr });
         
-        // Mock logic: Just suggesting standard times if no conflict
-        // Real logic requires complex collision detection with 'appointments' array
         suggestions.push({ date: dayStr, dayName, time: '09:00', staffId: finderStaffId === 'all' ? staff[0].id : finderStaffId });
         suggestions.push({ date: dayStr, dayName, time: '13:30', staffId: finderStaffId === 'all' ? staff[1]?.id || staff[0].id : finderStaffId });
         suggestions.push({ date: dayStr, dayName, time: '16:00', staffId: finderStaffId === 'all' ? staff[0].id : finderStaffId });
     }
-    // Limit to 4 suggestions
     return suggestions.slice(0, 4);
   };
 
@@ -149,26 +132,19 @@ export const CalendarPage = () => {
 
   const handleSlotSelect = (slot: any) => {
       setSelectedDateForModal(slot.date);
-      // We could also pass the time to the modal if we refactor modal to accept initialTime
-      // For now we just open the date
-      setSelectedStaffId(slot.staffId); // Switch view to that staff
+      setSelectedStaffId(slot.staffId);
       setIsFinderOpen(false);
       setIsModalOpen(true);
   };
 
-  // --- Drag and Drop Logic ---
-
   const handleDragStart = (e: React.DragEvent, id: number, duration: number) => {
     setDraggedAppointmentId(id);
-    
-    // Calculate where the user grabbed the element relative to its top
     const rect = e.currentTarget.getBoundingClientRect();
     const grabOffset = e.clientY - rect.top;
 
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', JSON.stringify({ id, duration, grabOffset }));
     
-    // Slight delay to styling to avoid visual glitch
     setTimeout(() => {
         if(e.currentTarget) e.currentTarget.classList.add('opacity-50');
     }, 0);
@@ -191,44 +167,31 @@ export const CalendarPage = () => {
     const data = e.dataTransfer.getData('text/plain');
     if (!data) return;
 
-    const { id, duration, grabOffset } = JSON.parse(data); // grabOffset is critical for accurate dropping
+    const { id, duration, grabOffset } = JSON.parse(data);
     
-    // Month View Drop
     if (view === 'month') {
         const newDateStr = format(targetDate, 'yyyy-MM-dd');
         updateAppointment(id, { date: newDateStr });
         return;
     }
 
-    // Week/Day View Drop Calculation
     const rect = e.currentTarget.getBoundingClientRect();
-    
-    // Adjusted Y position: Mouse Position - Column Top - Where user grabbed the card
-    // This ensures the TOP of the card snaps to the line, not the mouse cursor
     const relativeMouseY = e.clientY - rect.top;
     const correctedY = relativeMouseY - (grabOffset || 0);
-    
-    // rowHeight (60px) = 30 mins
     const pixelsPerMinute = rowHeight / 30;
     
     let totalMinutesFromStart = (correctedY / pixelsPerMinute);
-    
-    // Snap to nearest 15 mins for precision
     totalMinutesFromStart = Math.round(totalMinutesFromStart / 15) * 15;
 
-    // Ensure we don't drop before the start hour
     if (totalMinutesFromStart < 0) totalMinutesFromStart = 0;
 
     const absoluteStartMinutes = (startHour * 60) + totalMinutesFromStart;
-    
     const newStartHour = Math.floor(absoluteStartMinutes / 60);
     const newStartMinute = absoluteStartMinutes % 60;
     
-    // Prevent dropping past the end hour
     if (newStartHour < startHour || newStartHour >= endHour) return;
 
     const formattedStartTime = `${newStartHour.toString().padStart(2, '0')}:${newStartMinute.toString().padStart(2, '0')}`;
-
     const endTotalMinutes = absoluteStartMinutes + duration;
     const newEndHour = Math.floor(endTotalMinutes / 60);
     const newEndMinute = endTotalMinutes % 60;
@@ -249,9 +212,7 @@ export const CalendarPage = () => {
     const startMinutes = (startH - startHour) * 60 + startM;
     const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
     
-    // rowHeight is for 30 mins
     const pixelsPerMinute = rowHeight / 30;
-    
     const top = startMinutes * pixelsPerMinute; 
     const height = durationMinutes * pixelsPerMinute;
 
@@ -274,10 +235,9 @@ export const CalendarPage = () => {
     return (endH * 60 + endM) - (startH * 60 + startM);
   };
 
-  // CSS for striped background (Non-working hours / Weekends)
   const stripeStyle = {
-    backgroundColor: '#f9fafb', // gray-50
-    backgroundImage: `repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 1px, transparent 0, transparent 10px)` // gray-200 lines
+    backgroundColor: '#f9fafb',
+    backgroundImage: `repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 1px, transparent 0, transparent 10px)`
   };
 
   return (
@@ -296,7 +256,7 @@ export const CalendarPage = () => {
       </div>
 
       <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
-        {/* Availability Finder Overlay Modal (Simple Implementation) */}
+        {/* Availability Finder Overlay Modal */}
         {isFinderOpen && (
             <div className="absolute inset-x-0 top-0 z-[60] bg-white border-b border-slate-200 p-4 shadow-lg animate-in slide-in-from-top-10">
                 <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
@@ -318,12 +278,10 @@ export const CalendarPage = () => {
                             </Select>
                         </div>
                     </div>
-                    
                     <button onClick={() => setIsFinderOpen(false)} className="absolute top-2 right-2 text-slate-400 hover:text-black">
                         <X size={18} />
                     </button>
                 </div>
-
                 <div className="mt-4">
                     <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">Önerilen Saatler (Örnek)</h4>
                     <div className="flex gap-2 overflow-x-auto pb-1">
@@ -355,7 +313,6 @@ export const CalendarPage = () => {
             
             {/* Left Side: Navigation & Staff */}
             <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar pb-2 lg:pb-0">
-                {/* Date Navigation Pill */}
                 <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200 shrink-0">
                     <button onClick={() => handleNavigate('prev')} className="p-1.5 hover:bg-white rounded-md transition-colors text-slate-600">
                         <ChevronLeft size={18} />
@@ -376,7 +333,6 @@ export const CalendarPage = () => {
                     Bugün
                 </button>
 
-                {/* Staff Selector Pill */}
                 <div className="relative group min-w-[200px] shrink-0">
                     <button className="flex items-center gap-3 pl-1 pr-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 transition-colors bg-white w-full shadow-sm text-slate-700">
                         <img 
@@ -438,17 +394,16 @@ export const CalendarPage = () => {
         {(view === 'week' || view === 'day') && (
             <div className="flex-1 overflow-auto bg-white relative select-none">
                 <div 
-                    className="grid min-w-[600px] h-full" 
+                    className="grid min-w-[800px] h-full" 
                     style={{ 
                         gridTemplateColumns: `80px repeat(${daysToShow.length}, 1fr)`, 
                         gridTemplateRows: '56px 1fr' 
                     }}
                 >
-                    
-                    {/* Top-Left Corner (Fixed) */}
+                    {/* Top-Left Corner */}
                     <div className="sticky top-0 left-0 z-40 bg-white border-b border-r border-slate-200"></div>
                     
-                    {/* Day Headers (Sticky Top) */}
+                    {/* Day Headers */}
                     {daysToShow.map((day, i) => {
                         const isToday = isSameDay(day, new Date());
                         const isSunday = getDay(day) === 0;
@@ -466,17 +421,13 @@ export const CalendarPage = () => {
                         );
                     })}
 
-                    {/* Time Column (Sticky Left) */}
+                    {/* Time Column */}
                     <div className="relative border-r border-slate-200 bg-white sticky left-0 z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]" style={{ height: timeSlots.length * rowHeight }}>
                         {timeSlots.map(time => {
                             const isHour = time.endsWith(':00');
-                            // Center the time label vertically on the line
                             return (
                                 <div key={time} className={`absolute w-full flex items-start justify-end pr-3 pointer-events-none`} style={{ top: (timeSlots.indexOf(time)) * rowHeight, height: rowHeight }}>
-                                    <span className={`
-                                        absolute -top-3 right-3 px-1 bg-white font-medium
-                                        ${isHour ? 'text-xs text-slate-900 font-bold' : 'text-[10px] text-slate-400'}
-                                    `}>
+                                    <span className={`absolute -top-3 right-3 px-1 bg-white font-medium ${isHour ? 'text-xs text-slate-900 font-bold' : 'text-[10px] text-slate-400'}`}>
                                         {time}
                                     </span>
                                 </div>
@@ -489,7 +440,7 @@ export const CalendarPage = () => {
                         const dayAppts = getAppointmentsForDay(day);
                         const isToday = isSameDay(day, new Date());
                         const dayOfWeek = getDay(day);
-                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Cumartesi veya Pazar
+                        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; 
                         
                         return (
                             <div 
@@ -499,10 +450,8 @@ export const CalendarPage = () => {
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, day)}
                             >
-                                {/* Background Grid & Weekend Hatching */}
                                 {timeSlots.map((time, idx) => {
                                     const isHour = time.endsWith(':00');
-                                    
                                     return (
                                         <div 
                                             key={idx}
@@ -510,17 +459,14 @@ export const CalendarPage = () => {
                                             style={{ 
                                                 top: idx * rowHeight, 
                                                 height: rowHeight,
-                                                // Apply hatched pattern ONLY if it's weekend (Sat/Sun)
                                                 ...( isWeekend ? stripeStyle : {} )
                                             }}
                                         ></div>
                                     );
                                 })}
 
-                                {/* Click to Add (Overlay to catch clicks) */}
                                 <div className="absolute inset-0 z-0" onClick={() => handleDayClick(day)}></div>
 
-                                {/* Appointments */}
                                 {dayAppts.map(apt => {
                                     const style = getEventStyle(apt.startTime, apt.endTime, apt.serviceIds);
                                     const duration = getEventDuration(apt.startTime, apt.endTime);
@@ -557,15 +503,13 @@ export const CalendarPage = () => {
         {/* --- MONTH VIEW --- */}
         {view === 'month' && (
             <div className="flex-1 overflow-auto bg-white p-4">
-                <div className="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden">
-                    {/* Weekday Headers */}
+                <div className="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden min-w-[800px]">
                     {['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].map(day => (
                         <div key={day} className="bg-slate-50 p-2 text-center text-xs font-semibold text-slate-500 uppercase">
                             {day}
                         </div>
                     ))}
 
-                    {/* Days */}
                     {daysToShow.map((day, i) => {
                         const isToday = isSameDay(day, new Date());
                         const isCurrentMonth = isSameMonth(day, currentDate);

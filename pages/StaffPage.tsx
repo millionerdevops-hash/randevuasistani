@@ -130,37 +130,37 @@ export const StaffPage = () => {
         ))}
       </div>
 
-      {/* Profile Header (Redesigned) */}
-      <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8 transition-all">
+      {/* Profile Header */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 transition-all">
         <div className="relative group shrink-0">
             <img 
                 src={`https://i.pravatar.cc/300?img=${selectedStaff.id + 25}`} 
                 alt={selectedStaff.name} 
-                className="h-32 w-32 rounded-full object-cover border-4 border-slate-50 shadow-sm"
+                className="h-24 w-24 md:h-32 md:w-32 rounded-full object-cover border-4 border-slate-50 shadow-sm"
             />
         </div>
         
         <div className="flex-1 text-center md:text-left w-full">
             {isEditing ? (
-                <div className="space-y-4 max-w-md animate-in fade-in">
+                <div className="space-y-4 max-w-md mx-auto md:mx-0 animate-in fade-in">
                     <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Ad Soyad</label>
+                        <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Ad Soyad</label>
                         <Input value={editForm.name || ''} onChange={(e) => setEditForm({...editForm, name: e.target.value})} placeholder="Ad Soyad" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase">Email</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Email</label>
                             <Input value={editForm.email || ''} onChange={(e) => setEditForm({...editForm, email: e.target.value})} />
                          </div>
                          <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase">Telefon</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Telefon</label>
                             <PhoneInput value={editForm.phone || ''} onChange={(val) => setEditForm({...editForm, phone: val})} />
                          </div>
                     </div>
                 </div>
             ) : (
                 <>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-3">{selectedStaff.name}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">{selectedStaff.name}</h1>
                     <div className="flex flex-col sm:flex-row gap-3 text-slate-500 justify-center md:justify-start items-center flex-wrap">
                         <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-sm hover:bg-slate-100 transition-colors">
                             <Mail size={14}/> {selectedStaff.email}
@@ -173,22 +173,22 @@ export const StaffPage = () => {
             )}
         </div>
 
-        <div className="flex gap-3 self-center md:self-start mt-4 md:mt-2 shrink-0">
+        <div className="flex gap-3 self-center md:self-start mt-2 shrink-0 w-full md:w-auto justify-center md:justify-end">
              {isEditing ? (
                  <>
-                    <Button variant="outline" onClick={cancelEdit} className="h-10 px-5">
+                    <Button variant="outline" onClick={cancelEdit} className="h-10 px-5 flex-1 md:flex-none">
                          <X size={16} className="mr-2"/> İptal
                     </Button>
-                    <Button variant="black" onClick={saveEdit} className="h-10 px-5">
+                    <Button variant="black" onClick={saveEdit} className="h-10 px-5 flex-1 md:flex-none">
                          <Save size={16} className="mr-2"/> Kaydet
                     </Button>
                  </>
              ) : (
                  <>
-                    <Button variant="black" onClick={() => setIsAppointmentModalOpen(true)} className="h-10 shadow-lg shadow-indigo-100">
+                    <Button variant="black" onClick={() => setIsAppointmentModalOpen(true)} className="h-10 shadow-lg shadow-indigo-100 flex-1 md:flex-none">
                         Yeni Randevu <Calendar size={16} className="ml-2"/>
                     </Button>
-                    <Button variant="outline" onClick={startEdit} className="h-10">
+                    <Button variant="outline" onClick={startEdit} className="h-10 flex-1 md:flex-none">
                         Düzenle <Edit2 size={16} className="ml-2"/>
                     </Button>
                  </>
@@ -284,8 +284,9 @@ export const StaffPage = () => {
 
            {/* RANDEVULAR TAB */}
            {activeTab === "Randevular" && (
-             <Card className="overflow-hidden animate-in fade-in slide-in-from-bottom-2">
-                 <div className="overflow-x-auto">
+             <Card className="overflow-hidden animate-in fade-in slide-in-from-bottom-2 p-0">
+                 {/* 1. Desktop Table */}
+                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
                             <tr>
@@ -330,24 +331,57 @@ export const StaffPage = () => {
                         </tbody>
                     </table>
                  </div>
+
+                 {/* 2. Mobile Cards */}
+                 <div className="md:hidden">
+                    {staffAppointments.length > 0 ? (
+                         <div className="divide-y divide-slate-100">
+                             {staffAppointments.sort((a,b) => b.id - a.id).map(apt => (
+                                 <div key={apt.id} className="p-4 flex flex-col gap-2">
+                                     <div className="flex justify-between items-start">
+                                         <div className="font-bold text-slate-900">{getCustomerName(apt.customerId)}</div>
+                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                            apt.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                            apt.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            apt.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                                         }`}>
+                                            {apt.status === 'confirmed' ? 'Onaylı' : 
+                                             apt.status === 'pending' ? 'Bekliyor' :
+                                             apt.status === 'completed' ? 'Tamamlandı' : 'İptal'}
+                                         </span>
+                                     </div>
+                                     <div className="text-sm text-slate-600">{getServiceName(apt.serviceIds)}</div>
+                                     <div className="flex justify-between items-center text-xs text-slate-500 mt-1">
+                                         <div>
+                                            {format(parseISO(apt.date), 'd MMM yyyy', {locale: tr})} • {apt.startTime}
+                                         </div>
+                                         <div className="font-bold text-slate-900 text-sm">{apt.totalPrice} ₺</div>
+                                     </div>
+                                 </div>
+                             ))}
+                         </div>
+                    ) : (
+                        <div className="p-8 text-center text-slate-400">Kayıtlı randevu bulunamadı.</div>
+                    )}
+                 </div>
              </Card>
            )}
 
            {/* ÇALIŞMA SAATLERİ TAB */}
            {activeTab === "Çalışma Saatleri" && (
-             <Card className="p-8 animate-in fade-in slide-in-from-bottom-2">
+             <Card className="p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2">
                <div className="flex justify-between items-center mb-6">
                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">Haftalık Program</h2>
+                    <h2 className="text-lg md:text-xl font-bold text-slate-900">Haftalık Program</h2>
                     <p className="text-slate-500 text-sm">Standart çalışma saatlerini düzenleyin.</p>
                  </div>
                  {isEditingHours ? (
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={cancelEditHours} className="h-9 text-xs">İptal</Button>
-                        <Button variant="black" onClick={saveEditHours} className="h-9 text-xs">Kaydet</Button>
+                        <Button variant="outline" onClick={cancelEditHours} className="h-9 text-xs px-3">İptal</Button>
+                        <Button variant="black" onClick={saveEditHours} className="h-9 text-xs px-3">Kaydet</Button>
                      </div>
                  ) : (
-                     <Button variant="outline" onClick={startEditHours} className="h-9 text-xs">Düzenle</Button>
+                     <Button variant="outline" onClick={startEditHours} className="h-9 text-xs px-3">Düzenle</Button>
                  )}
                </div>
                
@@ -425,9 +459,9 @@ export const StaffPage = () => {
                            {staffLeaves.map(leave => (
                                <div key={leave.id} className="p-4 flex justify-between items-center hover:bg-slate-50 border-b border-slate-50 last:border-0 group">
                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                       <div className="flex items-center gap-2 text-slate-700 font-medium">
+                                       <div className="flex items-center gap-2 text-slate-700 font-medium text-sm sm:text-base">
                                             <Calendar size={16} className="text-slate-400"/>
-                                            {format(parseISO(leave.startDate), 'd MMM yyyy', {locale: tr})} 
+                                            {format(parseISO(leave.startDate), 'd MMM', {locale: tr})} 
                                             <span className="text-slate-400 text-sm mx-1">-</span> 
                                             {format(parseISO(leave.endDate), 'd MMM yyyy', {locale: tr})}
                                        </div>
