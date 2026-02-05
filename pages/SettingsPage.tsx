@@ -27,7 +27,7 @@ export const SettingsPage = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in pb-20">
       {/* Standardized Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Ayarlar</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">

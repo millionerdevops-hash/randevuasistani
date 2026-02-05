@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, User, Scissors, AlertCircle, Trash2, Repeat, Hash, CalendarDays, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Calendar as CalendarIcon, Clock, User, Scissors, AlertCircle, Trash2, Repeat, Hash, CalendarDays, ChevronDown, Check, Plus } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Button, Input, Select, DatePicker, TimePicker } from './ui/LayoutComponents';
 import { Appointment } from '../types';
@@ -30,6 +30,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // Service Dropdown State
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+  const serviceDropdownRef = useRef<HTMLDivElement>(null);
+
   // Recurring Fields
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceFreq, setRecurrenceFreq] = useState("weekly"); // daily, weekly, monthly
@@ -38,6 +42,19 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   // Calculation State
   const [endTime, setEndTime] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target as Node)) {
+        setIsServiceDropdownOpen(false);
+      }
+    };
+    if (isServiceDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isServiceDropdownOpen]);
 
   // Effect to populate form when editing
   useEffect(() => {
@@ -62,6 +79,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         if (initialStaffId) setStaffId(initialStaffId);
       }
       setError(null);
+      setIsServiceDropdownOpen(false);
     }
   }, [isOpen, appointment, initialDate, initialStaffId]);
 
@@ -94,6 +112,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     setSelectedServiceIds(prev => 
       prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
     );
+    // Dropdown'ı kapatma, birden fazla seçim yapılabilir olsun
+    // setIsServiceDropdownOpen(false); 
+  };
+
+  const removeService = (id: number) => {
+    setSelectedServiceIds(prev => prev.filter(pid => pid !== id));
   };
 
   const handleDelete = () => {
@@ -182,8 +206,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </div>
 
         {/* Scrollable Content Form */}
-        {/* Mobile: Single scrollable column. Desktop: Flex row with separate scrolling if needed or just fit content. */}
-        <form id="appointment-form" onSubmit={handleSubmit} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-slate-50 md:bg-white relative">
+        <form id="appointment-form" onSubmit={handleSubmit} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-white relative">
             
             {/* --- LEFT SIDE: Selection (Customer, Staff, Services) --- */}
             <div className="w-full md:w-7/12 p-4 md:p-6 flex flex-col gap-5 border-b md:border-b-0 md:border-r border-slate-200 bg-white">
@@ -233,63 +256,99 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     </div>
                 </div>
 
-                {/* Hizmetler */}
-                <div className="flex flex-col flex-1 min-h-0">
-                    <div className="flex justify-between items-end mb-3 sticky top-0 bg-white z-10 py-1">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                            <Scissors size={14} className="text-slate-400" /> Hizmetler
-                        </label>
-                        {selectedServiceIds.length > 0 && (
-                            <span className="text-[10px] font-bold text-white bg-black px-2 py-1 rounded-full animate-in zoom-in">
-                                {selectedServiceIds.length} Seçildi
-                            </span>
-                        )}
-                    </div>
-                    
-                    {/* Services List - Mobile: List View (grid-cols-1), Desktop: Grid (grid-cols-2) */}
-                    {/* Fixed: Use overflow-visible on mobile so page scrolls, internal scroll on desktop */}
-                    <div className="md:flex-1 md:overflow-y-auto md:pr-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4">
-                            {services.map(s => {
-                                const isSelected = selectedServiceIds.includes(s.id);
-                                return (
-                                    <button
-                                        key={s.id}
-                                        type="button"
-                                        onClick={() => toggleService(s.id)}
-                                        className={`relative flex items-center p-3 rounded-xl border transition-all text-left group w-full ${
-                                            isSelected
-                                            ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200 transform scale-[1.01]'
-                                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                                        }`}
+                {/* Hizmetler Dropdown & List */}
+                <div className="space-y-2 flex-1 flex flex-col" ref={serviceDropdownRef}>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <Scissors size={14} className="text-slate-400" /> Hizmetler
+                    </label>
+
+                    {/* Selected Services List (Chips) */}
+                    <div className="flex flex-wrap gap-2 mb-1">
+                        {selectedServiceIds.map(id => {
+                            const s = services.find(ser => ser.id === id);
+                            if (!s) return null;
+                            return (
+                                <div key={id} className="flex items-center gap-2 bg-slate-900 text-white pl-3 pr-2 py-1.5 rounded-lg text-sm font-medium shadow-sm animate-in zoom-in duration-200">
+                                    <span>{s.name}</span>
+                                    <span className="opacity-60 text-xs">({s.duration}dk)</span>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => removeService(id)}
+                                        className="ml-1 p-0.5 hover:bg-white/20 rounded-full transition-colors"
                                     >
-                                        {/* Color Indicator */}
-                                        <div 
-                                            className={`w-1.5 h-8 rounded-full mr-3 shrink-0 transition-colors ${isSelected ? 'bg-white/40' : ''}`} 
-                                            style={{ backgroundColor: isSelected ? undefined : s.color }}
-                                        ></div>
-                                        
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                            <div className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s.name}</div>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className={`text-[10px] font-medium ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{s.duration} dk</span>
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{s.category}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className={`text-sm font-bold ml-2 ${isSelected ? 'text-white' : 'text-slate-900'}`}>
-                                            {s.price}₺
-                                        </div>
+                                        <X size={14} />
                                     </button>
-                                );
-                            })}
-                        </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Dropdown Trigger */}
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
+                            className={`w-full h-12 flex items-center justify-between px-3 border rounded-xl bg-white text-left transition-all ${isServiceDropdownOpen ? 'border-black ring-1 ring-black' : 'border-slate-200 hover:border-slate-300'}`}
+                        >
+                            <span className="text-slate-500 text-sm font-medium">
+                                {selectedServiceIds.length === 0 ? "Hizmet Ekle..." : "Başka hizmet ekle..."}
+                            </span>
+                            <ChevronDown size={18} className={`text-slate-400 transition-transform ${isServiceDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isServiceDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 origin-top">
+                                {services.map(s => {
+                                    const isSelected = selectedServiceIds.includes(s.id);
+                                    return (
+                                        <button
+                                            key={s.id}
+                                            type="button"
+                                            onClick={() => toggleService(s.id)}
+                                            className={`w-full text-left px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors flex items-center justify-between group ${isSelected ? 'bg-slate-50' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div 
+                                                    className={`w-1 h-8 rounded-full transition-colors ${isSelected ? 'bg-slate-300' : ''}`} 
+                                                    style={{ backgroundColor: isSelected ? undefined : s.color }}
+                                                ></div>
+                                                <div>
+                                                    <div className={`text-sm font-bold ${isSelected ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                                                        {s.name}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {s.duration} dk
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <span className={`font-bold text-sm ${isSelected ? 'text-slate-400 line-through' : 'text-indigo-600'}`}>
+                                                    {s.price}₺
+                                                </span>
+                                                {isSelected ? (
+                                                    <div className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-slate-500">
+                                                        <Check size={12} strokeWidth={3} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-5 h-5 border border-slate-300 rounded-full flex items-center justify-center text-transparent group-hover:border-slate-400">
+                                                        <Plus size={12} className="text-slate-300" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* --- RIGHT SIDE: Time & Notes --- */}
-            <div className="w-full md:w-5/12 p-4 md:p-6 bg-slate-50 flex flex-col gap-5">
+            {/* Updated bg-slate-50 to bg-white for mobile to match top section */}
+            <div className="w-full md:w-5/12 p-4 md:p-6 bg-white md:bg-slate-50 flex flex-col gap-5">
                 
                 {/* Tarih ve Saat */}
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">

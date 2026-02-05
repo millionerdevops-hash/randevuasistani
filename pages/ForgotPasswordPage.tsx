@@ -21,29 +21,23 @@ export const ForgotPasswordPage = () => {
   return (
     <div className="flex min-h-screen bg-white font-sans overflow-hidden">
       {/* Left Side - Form Area */}
-      <div className="w-full lg:w-1/2 relative flex flex-col justify-center animate-in fade-in slide-in-from-left-4 duration-500">
+      <div className="w-full lg:w-1/2 flex flex-col p-6 sm:p-12 lg:p-0 relative animate-in fade-in slide-in-from-left-4 duration-500">
         
-        {/* Navigation - Back Button (Acts as Header) */}
-        <div className="absolute top-8 left-8 sm:left-12 z-20">
+        {/* Navigation - Back Button */}
+        {/* Mobile: In flow. Desktop: Absolute */}
+        <div className="mb-8 lg:mb-0 lg:absolute lg:top-8 lg:left-12 z-20">
             <Link 
                 to="/login" 
-                className="group flex items-center text-sm font-semibold text-slate-500 hover:text-black transition-colors"
+                className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-black transition-colors"
             >
-                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-colors border border-slate-100">
-                    <ArrowLeft size={16} />
-                </div>
+                <ArrowLeft size={18} className="mr-2" />
                 Giriş sayfasına dön
             </Link>
         </div>
 
-        {/* Content Container */}
-        <div className="w-full max-w-md mx-auto px-8 sm:px-0 mt-12 sm:mt-0">
-            {/* Optional Branding above title */}
-            <div className="mb-6 flex items-center gap-2 text-slate-300">
-                 <div className="h-6 w-6 bg-slate-100 rounded-md flex items-center justify-center font-bold text-slate-400 text-xs">r.</div>
-                 <span className="font-semibold text-sm">randevumvar</span>
-            </div>
-
+        {/* Content Container - Centered */}
+        <div className="flex-1 flex flex-col justify-center w-full max-w-md mx-auto">
+            
             {isSubmitted ? (
                 <div className="bg-green-50 border border-green-100 rounded-2xl p-8 text-center animate-in zoom-in-95">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -64,7 +58,7 @@ export const ForgotPasswordPage = () => {
                     <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
                         Şifreni mi unuttun?
                     </h1>
-                    <p className="text-slate-500 text-lg leading-relaxed">
+                    <p className="text-slate-500 text-base sm:text-lg leading-relaxed">
                         Endişelenme! E-posta adresini gir, sana şifreni sıfırlaman için bir bağlantı gönderelim.
                     </p>
                     </div>
@@ -79,7 +73,7 @@ export const ForgotPasswordPage = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                            className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                             placeholder="isim@sirket.com"
                         />
                         <Mail className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -89,7 +83,7 @@ export const ForgotPasswordPage = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-12 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform active:scale-[0.98]"
+                        className="w-full h-12 bg-black hover:bg-gray-800 text-white font-bold rounded-xl transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform active:scale-[0.98]"
                     >
                         {isLoading ? <Loader2 className="animate-spin" /> : 'Sıfırlama Bağlantısı Gönder'}
                     </button>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, Button, formatPhoneNumber } from '../components/ui/LayoutComponents';
-import { Calendar, UserPlus, Tag, Gift, Search, MoreHorizontal, ChevronRight, Clock, User, ChevronDown } from 'lucide-react';
+import { Calendar, UserPlus, Tag, Gift, Search, MoreHorizontal, ChevronRight, Clock, User, ChevronDown, Check } from 'lucide-react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -9,6 +9,9 @@ export const SummaryPage = () => {
   const { appointments, customers, services, staff } = useStore();
   const [activeTab, setActiveTab] = useState('Tüm Randevular');
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Custom Dropdown State
+  const [isMobileTabOpen, setIsMobileTabOpen] = useState(false);
 
   const today = new Date();
 
@@ -81,7 +84,7 @@ export const SummaryPage = () => {
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in pb-20 md:pb-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Günlük Özet</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
@@ -109,24 +112,48 @@ export const SummaryPage = () => {
         ))}
       </div>
 
-      {/* Main Content Area */}
-      <Card className="p-0 border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
+      {/* Main Content Area - Removed min-h-[500px] to fix excessive whitespace */}
+      <Card className="p-0 border border-slate-200 shadow-sm overflow-hidden flex flex-col bg-white">
          
          {/* 2. Tabs / Filter Section */}
          <div className="border-b border-slate-200 bg-slate-50/50">
              
-             {/* Mobile: Dropdown Selector */}
-             <div className="md:hidden p-4">
+             {/* Mobile: CUSTOM Dropdown Selector */}
+             <div className="md:hidden p-4 relative z-20">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Görünüm</label>
+                
                 <div className="relative">
-                    <select 
-                        value={activeTab}
-                        onChange={(e) => setActiveTab(e.target.value)}
-                        className="w-full h-11 appearance-none bg-white border border-slate-300 text-slate-900 text-sm rounded-xl px-4 focus:outline-none focus:ring-2 focus:ring-black font-medium shadow-sm"
+                    <button 
+                        onClick={() => setIsMobileTabOpen(!isMobileTabOpen)}
+                        className="w-full h-12 bg-white border border-slate-300 text-slate-900 text-sm rounded-xl px-4 flex items-center justify-between font-bold shadow-sm active:scale-[0.99] transition-all"
                     >
-                        {tabs.map(tab => <option key={tab} value={tab}>{tab}</option>)}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-500 pointer-events-none" />
+                        <span className="truncate">{activeTab}</span>
+                        <ChevronDown size={18} className={`text-slate-500 transition-transform duration-200 ${isMobileTabOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Custom Dropdown Menu */}
+                    {isMobileTabOpen && (
+                        <>
+                            {/* Backdrop to close on click outside */}
+                            <div className="fixed inset-0 z-10" onClick={() => setIsMobileTabOpen(false)}></div>
+                            
+                            {/* Menu List */}
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-[300px] overflow-y-auto animate-in fade-in zoom-in-95 origin-top">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => { setActiveTab(tab); setIsMobileTabOpen(false); }}
+                                        className={`w-full text-left px-4 py-3.5 text-sm font-medium border-b border-slate-50 last:border-0 hover:bg-slate-50 flex items-center justify-between ${
+                                            activeTab === tab ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-700'
+                                        }`}
+                                    >
+                                        {tab}
+                                        {activeTab === tab && <Check size={16} className="text-indigo-600"/>}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
              </div>
 
@@ -212,7 +239,7 @@ export const SummaryPage = () => {
                             )
                         })
                     ) : (
-                        <tr><td colSpan={8} className="px-6 py-12 text-center text-slate-400">Kayıt bulunamadı.</td></tr>
+                        <tr><td colSpan={8} className="px-6 py-16 text-center text-slate-400">Kayıt bulunamadı.</td></tr>
                     )}
                 </tbody>
             </table>
@@ -251,15 +278,15 @@ export const SummaryPage = () => {
                     })}
                  </div>
              ) : (
-                 <div className="p-12 text-center text-slate-400 flex flex-col items-center">
+                 <div className="py-16 text-center text-slate-400 flex flex-col items-center">
                     <Search size={32} className="mb-2 opacity-20" />
                     <p>Kayıt bulunamadı.</p>
                  </div>
              )}
          </div>
 
-         {/* Footer */}
-         <div className="bg-white px-4 md:px-6 py-4 border-t border-slate-100 flex items-center justify-between sticky bottom-0">
+         {/* Footer - Removed sticky positioning for better flow */}
+         <div className="bg-white px-4 md:px-6 py-4 border-t border-slate-100 flex items-center justify-between">
              <div className="text-xs md:text-sm text-slate-500">Toplam {filteredData.length} kayıt</div>
              <div className="flex gap-1">
                  <button className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-50 font-medium" disabled>Önceki</button>

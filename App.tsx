@@ -27,6 +27,21 @@ const ProtectedLayout = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  const getPageTitle = (path: string) => {
+    if (path === '/') return 'Özet';
+    if (path.startsWith('/transactions')) return 'Adisyonlar';
+    if (path.startsWith('/calendar')) return 'Takvim';
+    if (path.startsWith('/appointments')) return 'Randevular';
+    if (path.startsWith('/sessions')) return 'Seans Takibi';
+    if (path.startsWith('/agenda')) return 'Ajanda';
+    if (path.startsWith('/customers')) return 'Müşteriler';
+    if (path.startsWith('/services')) return 'Hizmetler';
+    if (path.startsWith('/staff')) return 'Personel';
+    if (path.startsWith('/reports')) return 'Raporlar';
+    if (path.startsWith('/settings')) return 'Ayarlar';
+    return 'Randevu Asistanı';
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar />
@@ -41,7 +56,7 @@ const ProtectedLayout = () => {
           isSidebarExpanded ? 'md:ml-64' : 'md:ml-20'
         }`}
       >
-        <MobileHeader title="Randevu Asistanı" />
+        <MobileHeader title={getPageTitle(location.pathname)} />
         <div className="flex-1 p-4 md:p-8 overflow-y-auto w-full h-full">
           <Outlet />
         </div>

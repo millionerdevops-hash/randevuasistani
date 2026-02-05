@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Card, Button, Input, Select, DatePicker } from '../components/ui/LayoutComponents';
+import { Card, Button, Input, DatePicker, CustomSelect } from '../components/ui/LayoutComponents';
 import { Search, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Filter, Clock } from 'lucide-react';
 import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -69,7 +69,7 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Adisyonlar</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
@@ -92,14 +92,15 @@ export const Dashboard = () => {
           <Search className="absolute left-3 top-3.5 text-slate-400" size={18} />
         </div>
         <div className="md:col-span-4">
-          <Select 
-            className="h-12 bg-white"
+          <CustomSelect 
             value={staffFilter}
-            onChange={(e) => setStaffFilter(e.target.value)}
-          >
-             <option value="all">Tüm çalışanlar</option>
-             {staff.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-          </Select>
+            onChange={(val) => setStaffFilter(val)}
+            options={[
+                { value: 'all', label: 'Tüm çalışanlar' },
+                ...staff.map(s => ({ value: s.name, label: s.name }))
+            ]}
+            className="h-12"
+          />
         </div>
         
         <div className="md:col-span-4 relative" ref={filterRef}>

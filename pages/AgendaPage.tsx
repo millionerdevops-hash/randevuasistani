@@ -41,10 +41,16 @@ export const AgendaPage = () => {
     updateNote(note.id, { status: note.status === 'read' ? 'unread' : 'read' });
   };
 
+  const handleNewNote = () => {
+      setSelectedNote(null);
+      setIsModalOpen(true);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in">
+    <div className="space-y-6 animate-in fade-in pb-20 md:pb-0">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="hidden md:block">
            <h1 className="text-2xl font-bold text-slate-900">Ajanda / Notlar</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
               <span>Ana Sayfa</span>
@@ -52,7 +58,8 @@ export const AgendaPage = () => {
               <span className="text-slate-900 font-medium">Notlar</span>
            </div>
         </div>
-        <Button variant="black" onClick={() => { setSelectedNote(null); setIsModalOpen(true); }} className="w-full sm:w-auto">
+        {/* Desktop Button */}
+        <Button variant="black" onClick={handleNewNote} className="hidden md:flex w-full sm:w-auto">
            <Plus size={18} className="mr-2" /> Yeni Not Ekle
         </Button>
       </div>
@@ -155,6 +162,15 @@ export const AgendaPage = () => {
             <span className="text-sm text-slate-600 flex items-center">{currentPage} / {totalPages || 1}</span>
             <Button variant="outline" className="h-8 px-3 text-xs" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Sonraki</Button>
       </div>
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <button 
+        onClick={handleNewNote}
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-105 active:scale-95 transition-all"
+        aria-label="Yeni Not Ekle"
+      >
+        <Plus size={28} />
+      </button>
 
       <NoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} note={selectedNote} />
     </div>

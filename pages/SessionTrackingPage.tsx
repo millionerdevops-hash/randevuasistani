@@ -28,11 +28,16 @@ export const SessionTrackingPage = () => {
     }
   };
 
+  const handleNewPackage = () => {
+      // Mock Action as modal logic wasn't fully implemented in base code
+      console.log("Open new package modal");
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in">
+    <div className="space-y-6 animate-in fade-in pb-20 md:pb-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="hidden md:block">
            <h1 className="text-2xl font-bold text-slate-900">Seans Takibi</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
               <span>Ana Sayfa</span>
@@ -40,7 +45,8 @@ export const SessionTrackingPage = () => {
               <span className="text-slate-900 font-medium">Seans Takibi</span>
            </div>
         </div>
-        <Button variant="black">
+        {/* Desktop Button */}
+        <Button variant="black" onClick={handleNewPackage} className="hidden md:flex">
            <Plus size={18} className="mr-2" /> Yeni Paket Satışı
         </Button>
       </div>
@@ -204,6 +210,16 @@ export const SessionTrackingPage = () => {
          <span className="text-sm text-slate-600 flex items-center">1 / 1</span>
          <Button variant="outline" className="h-8 px-3 text-xs" disabled>Sonraki</Button>
       </div>
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <button 
+        onClick={handleNewPackage}
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-105 active:scale-95 transition-all"
+        aria-label="Yeni Paket Satışı"
+      >
+        <Plus size={28} />
+      </button>
+
     </div>
   );
 };

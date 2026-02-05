@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Clock, Bell, AlignLeft, Type, User } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { Button, Input, DatePicker, TimePicker, Select } from './ui/LayoutComponents';
+import { Button, Input, DatePicker, TimePicker, Select, CustomSelect } from './ui/LayoutComponents';
 import { Note } from '../types';
 
 interface NoteModalProps {
@@ -70,10 +70,10 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, note }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-visible">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white rounded-t-2xl">
           <div>
              <h2 className="text-lg font-bold text-slate-900">
                {note ? "Notu Düzenle" : "Yeni Not Ekle"}
@@ -150,9 +150,12 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, note }) =
                     <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
                         <User size={14} className="text-slate-500" /> Oluşturan
                     </label>
-                    <Select value={creator} onChange={(e) => setCreator(e.target.value)} className="h-10 text-sm">
-                        {staff.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                    </Select>
+                    <CustomSelect 
+                        value={creator} 
+                        onChange={(val) => setCreator(val)} 
+                        options={staff.map(s => ({ value: s.name, label: s.name }))}
+                        className="h-10"
+                    />
                 </div>
                 
                 <div className="h-10 flex items-center">

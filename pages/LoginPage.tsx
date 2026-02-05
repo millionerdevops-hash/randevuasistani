@@ -65,26 +65,24 @@ export const LoginPage = () => {
   return (
     <div className="flex min-h-screen bg-white font-sans overflow-hidden">
       {/* Left Side - Form Area */}
-      <div className="w-full lg:w-1/2 relative flex flex-col justify-center animate-in fade-in slide-in-from-left-4 duration-500">
+      <div className="w-full lg:w-1/2 flex flex-col p-6 sm:p-12 lg:p-0 relative animate-in fade-in slide-in-from-left-4 duration-500">
         
-        {/* Header/Logo - Absolute Positioned Top Left */}
-        <div className="absolute top-8 left-8 sm:left-12 flex items-center gap-3 z-20">
-          <div className="h-8 w-8 bg-black rounded-lg flex items-center justify-center font-bold text-white text-lg">
+        {/* Header/Logo */}
+        <div className="flex items-center gap-3 mb-8 lg:mb-0 lg:absolute lg:top-8 lg:left-12 z-20">
+          <div className="h-9 w-9 bg-black rounded-xl flex items-center justify-center font-bold text-white text-lg">
             r.
           </div>
           <span className="font-bold text-xl tracking-tight text-black">randevumvar</span>
-          <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
-          <span className="text-slate-500 font-medium text-sm">Partner</span>
         </div>
 
-        {/* Form Container - Centered */}
-        <div className="w-full max-w-md mx-auto px-8 sm:px-0">
+        {/* Form Container - Centered Vertically & Horizontally */}
+        <div className="flex-1 flex flex-col justify-center w-full max-w-md mx-auto">
           {/* Title */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
               {isRegister ? 'Hesap Oluştur' : 'Tekrar hoş geldin!'}
             </h1>
-            <p className="text-slate-500 text-lg leading-relaxed">
+            <p className="text-slate-500 text-base sm:text-lg leading-relaxed">
               {isRegister 
                 ? 'İşletmeni büyütmek için hemen aramıza katıl.' 
                 : 'İşletmeni yönetmek için hesabına giriş yap.'}
@@ -92,7 +90,7 @@ export const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             
             {isRegister && (
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-4">
@@ -103,7 +101,7 @@ export const LoginPage = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                    className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                     placeholder="Güzellik Salonu"
                   />
                   <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -119,7 +117,7 @@ export const LoginPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                   placeholder="isim@sirket.com"
                 />
                 <Mail className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -130,7 +128,7 @@ export const LoginPage = () => {
               <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-gray-700">Şifre</label>
                 {!isRegister && (
-                  <Link to="/forgot-password" className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                  <Link to="/forgot-password" className="text-xs font-medium text-gray-500 hover:text-black transition-colors">
                     Şifremi unuttum
                   </Link>
                 )}
@@ -141,7 +139,7 @@ export const LoginPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 pl-10 pr-10 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                  className="w-full h-12 pl-10 pr-10 rounded-xl border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
                 <Lock className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -158,14 +156,14 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform active:scale-[0.98]"
+              className="w-full h-12 bg-black hover:bg-gray-800 text-white font-bold rounded-xl transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform active:scale-[0.98] mt-2"
             >
               {isLoading ? <Loader2 className="animate-spin" /> : (isRegister ? 'Kayıt Ol' : 'Giriş Yap')}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-gray-500 font-medium">
               {isRegister ? 'Zaten hesabın var mı?' : 'Hesabın yok mu?'}
               <button 
@@ -176,7 +174,7 @@ export const LoginPage = () => {
               </button>
             </p>
 
-            <p className="mt-12 text-xs text-gray-400 leading-relaxed px-4 sm:px-8">
+            <p className="mt-6 text-xs text-gray-400 leading-relaxed">
               Giriş yaparak <Link to="/terms" className="underline hover:text-gray-600">Kullanım Koşulları</Link> ve <Link to="/privacy" className="underline hover:text-gray-600">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
             </p>
           </div>

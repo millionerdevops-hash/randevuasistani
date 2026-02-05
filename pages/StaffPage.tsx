@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
-import { Card, Button, Input, TimePicker, PhoneInput, formatPhoneNumber, Select } from '../components/ui/LayoutComponents';
-import { Phone, Mail, Calendar, Edit2, Clock, CheckCircle, Wallet, Award, Save, X, CalendarCheck, Trash2, ChevronRight, User, ChevronDown } from 'lucide-react';
+import { Card, Button, Input, TimePicker, PhoneInput, formatPhoneNumber, CustomSelect } from '../components/ui/LayoutComponents';
+import { Phone, Mail, Calendar, Edit2, Clock, CheckCircle, Wallet, Award, Save, X, CalendarCheck, Trash2, ChevronRight, User } from 'lucide-react';
 import { AppointmentModal } from '../components/AppointmentModal';
 import { LeaveModal } from '../components/LeaveModal';
 import { Staff, WorkingHour } from '../types';
@@ -28,14 +28,6 @@ export const StaffPage = () => {
   const selectedStaff = staff.find(s => s.id === selectedStaffId) || staff[0];
 
   const tabs = ["Genel Bakış", "Randevular", "Çalışma Saatleri", "İzinler"];
-
-  // Helper to calculate duration for display
-  const calculateDuration = (start: string, end: string) => {
-    const [startH, startM] = start.split(':').map(Number);
-    const [endH, endM] = end.split(':').map(Number);
-    const diff = (endH * 60 + endM) - (startH * 60 + startM);
-    return Math.floor(diff / 60) + " sa";
-  };
 
   // Stats Logic
   const staffAppointments = appointments.filter(a => a.staffId === selectedStaffId);
@@ -64,7 +56,6 @@ export const StaffPage = () => {
 
   // --- Working Hours Edit Logic ---
   const startEditHours = () => {
-    // Clone existing hours or use defaults if missing (fallback)
     const hoursToEdit = selectedStaff.workingHours || [];
     setEditedHours(JSON.parse(JSON.stringify(hoursToEdit)));
     setIsEditingHours(true);
@@ -101,7 +92,7 @@ export const StaffPage = () => {
   return (
     <div className="space-y-6 animate-in fade-in pb-20">
       {/* Standardized Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Personel Yönetimi</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
@@ -112,19 +103,16 @@ export const StaffPage = () => {
         </div>
       </div>
 
-      {/* Staff Selector - Mobile Optimized */}
+      {/* Staff Selector - Mobile Optimized with CustomSelect */}
       <div className="md:hidden">
          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Personel Seç</label>
-         <div className="relative">
-            <select 
-                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 appearance-none font-semibold text-slate-800 focus:ring-2 focus:ring-black focus:outline-none"
-                value={selectedStaffId}
-                onChange={(e) => { setSelectedStaffId(Number(e.target.value)); setIsEditing(false); setIsEditingHours(false); setActiveTab("Genel Bakış"); }}
-            >
-                {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16} />
-         </div>
+         <CustomSelect
+            value={selectedStaffId}
+            onChange={(val) => { setSelectedStaffId(Number(val)); setIsEditing(false); setIsEditingHours(false); setActiveTab("Genel Bakış"); }}
+            options={staff.map(s => ({ value: s.id, label: s.name }))}
+            className="h-12"
+            icon={User}
+         />
       </div>
 
       {/* Staff Selector - Desktop */}

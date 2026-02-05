@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Card, Button } from '../components/ui/LayoutComponents';
-import { Plus, MoreVertical, Pencil, Trash2, ChevronRight } from 'lucide-react';
+import { Card, Button, CustomSelect } from '../components/ui/LayoutComponents';
+import { Plus, MoreVertical, Pencil, Trash2, ChevronRight, Tag, MoreHorizontal } from 'lucide-react';
 import { ServiceModal } from '../components/ServiceModal';
 import { Service } from '../types';
 
@@ -52,14 +52,20 @@ export const ServicesPage = () => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
+  // Prepare options for Mobile Dropdown
+  const categoryOptions = [
+    { value: "Tüm kategoriler", label: `Tüm kategoriler (${services.length})` },
+    ...categories.map(cat => ({ value: cat, label: `${cat} (${categoryCounts[cat]})` }))
+  ];
+
   return (
     <div 
-      className="flex flex-col h-full relative space-y-6 animate-in fade-in" 
+      className="flex flex-col relative space-y-6 animate-in fade-in pb-20" 
       onClick={() => setOpenMenuId(null)} // Sayfada herhangi bir yere tıklayınca menüyü kapat
     >
       {/* Standardized Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        <div className="hidden md:block">
            <h1 className="text-2xl font-bold text-slate-900">Hizmetler</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
               <span>Ana Sayfa</span>
@@ -67,34 +73,46 @@ export const ServicesPage = () => {
               <span className="text-slate-900 font-medium">Hizmetler</span>
            </div>
         </div>
-        <Button variant="black" onClick={handleAdd}>
+        {/* Desktop Button */}
+        <Button variant="black" onClick={handleAdd} className="hidden md:flex">
           Ekle <Plus size={16} className="ml-2" />
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
         
-        {/* Left Sidebar - Categories */}
-        {/* Mobile: Horizontal Scroll List / Desktop: Vertical Card List */}
-        <div className="lg:col-span-1 lg:bg-white lg:border lg:border-slate-100 lg:shadow-sm lg:rounded-2xl lg:p-4 sticky top-0 z-10 lg:static -mx-4 px-4 lg:mx-0 lg:px-0 bg-slate-50/95 backdrop-blur-sm lg:bg-transparent py-2 lg:py-0">
-          <h3 className="font-bold text-lg mb-4 px-2 hidden lg:block text-slate-900">Kategoriler</h3>
+        {/* Mobile Dropdown Category Selector */}
+        <div className="lg:hidden mb-2">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Kategori Filtrele</label>
+            <CustomSelect 
+                value={selectedCategory}
+                onChange={(val) => setSelectedCategory(val)}
+                options={categoryOptions}
+                icon={Tag}
+                className="w-full"
+            />
+        </div>
+
+        {/* Left Sidebar - Categories (Desktop Only) */}
+        <div className="hidden lg:block lg:col-span-1 lg:bg-white lg:border lg:border-slate-100 lg:shadow-sm lg:rounded-2xl lg:p-4 sticky top-0 z-10">
+          <h3 className="font-bold text-lg mb-4 px-2 text-slate-900">Kategoriler</h3>
           
-          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
+          <div className="flex flex-col gap-2">
             {/* Tüm Kategoriler Butonu */}
             <button
               onClick={() => setSelectedCategory("Tüm kategoriler")}
               className={`
-                shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 rounded-full lg:rounded-xl text-sm font-medium transition-all border lg:border-0
+                shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
                 ${selectedCategory === "Tüm kategoriler" 
-                  ? 'bg-black text-white border-black lg:bg-slate-100 lg:text-slate-900 shadow-md lg:shadow-none' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 lg:hover:bg-slate-50'
+                  ? 'bg-slate-100 text-slate-900' 
+                  : 'bg-white text-slate-600 hover:bg-slate-50'
                 }
               `}
             >
               <span>Tüm kategoriler</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 selectedCategory === "Tüm kategoriler" 
-                  ? 'bg-white text-black lg:bg-black lg:text-white' 
+                  ? 'bg-black text-white' 
                   : 'bg-slate-100 text-slate-500'
               }`}>
                 {services.length}
@@ -107,17 +125,17 @@ export const ServicesPage = () => {
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`
-                   shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 rounded-full lg:rounded-xl text-sm font-medium transition-all border lg:border-0
+                   shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
                    ${selectedCategory === cat 
-                     ? 'bg-black text-white border-black lg:bg-slate-100 lg:text-slate-900 shadow-md lg:shadow-none' 
-                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 lg:hover:bg-slate-50'
+                     ? 'bg-slate-100 text-slate-900' 
+                     : 'bg-white text-slate-600 hover:bg-slate-50'
                    }
                 `}
               >
                 <span>{cat}</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                    selectedCategory === cat 
-                     ? 'bg-white text-black lg:bg-black lg:text-white' 
+                     ? 'bg-black text-white' 
                      : 'bg-slate-100 text-slate-500'
                 }`}>
                   {categoryCounts[cat]}
@@ -128,7 +146,7 @@ export const ServicesPage = () => {
         </div>
 
         {/* Right Content - Service List */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4">
           <div className="flex items-center justify-between">
              <h2 className="font-bold text-xl text-slate-800">{selectedCategory}</h2>
              <span className="text-sm text-slate-500 hidden sm:block">{filteredServices.length} hizmet listeleniyor</span>
@@ -141,70 +159,79 @@ export const ServicesPage = () => {
                </div>
             ) : (
               filteredServices.map(service => (
-                <div key={service.id} className="bg-white rounded-xl border border-slate-200 p-0 flex flex-col sm:flex-row items-center overflow-hidden hover:shadow-md transition-shadow relative group">
-                  {/* Color Strip */}
-                  <div className="w-full sm:w-1.5 h-1.5 sm:h-auto shrink-0" style={{ backgroundColor: service.color }}></div>
-                  
-                  <div className="flex-1 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-4">
-                    <div className="flex-1 w-full">
-                      <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-bold text-slate-900 text-base sm:text-lg">{service.name}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{service.category}</span>
-                                <span className="text-slate-400 text-xs">•</span>
-                                <span className="text-slate-500 text-sm">{service.duration} dk</span>
-                            </div>
-                          </div>
-                          {/* Mobile Price (Shown at top right on mobile) */}
-                          <div className="sm:hidden font-bold text-slate-900 text-lg">
-                            {service.price}₺
-                          </div>
-                      </div>
-                    </div>
+                <div 
+                    key={service.id} 
+                    className={`bg-white rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md relative group flex min-h-[72px] ${openMenuId === service.id ? 'z-20' : ''}`}
+                >
+                    {/* Color Strip - Now a direct child, ensuring fixed width */}
+                    <div className="w-1.5 shrink-0 rounded-l-xl" style={{ backgroundColor: service.color }}></div>
                     
-                    <div className="flex items-center justify-between w-full sm:w-auto gap-6 sm:relative pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50 mt-2 sm:mt-0">
-                      {/* Desktop Price */}
-                      <div className="hidden sm:block font-bold text-slate-900 text-lg w-20 text-right">
-                        {service.price}₺
-                      </div>
-                      
-                      {/* Action Menu - Mobile Friendly Position */}
-                      <div className="relative ml-auto sm:ml-0">
-                        <button 
-                          onClick={(e) => toggleMenu(e, service.id)}
-                          className={`p-2 rounded-lg transition-colors ${openMenuId === service.id ? 'bg-slate-100 text-black' : 'text-slate-400 hover:text-black hover:bg-slate-100'}`}
-                        >
-                           <MoreVertical size={20} />
-                        </button>
+                    {/* Content - Removed nested flexible wrappers that caused height issues */}
+                    <div className="flex-1 p-3 flex items-center gap-3 min-w-0">
+                        
+                        {/* Info Section */}
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-slate-900 text-sm truncate">{service.name}</h3>
+                                {/* Category Badge */}
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-100">
+                                    {service.category}
+                                </span>
+                            </div>
+                            <div className="text-xs text-slate-500 font-medium">
+                                {service.duration} dk
+                            </div>
+                        </div>
 
-                        {/* Dropdown Popover */}
-                        {openMenuId === service.id && (
-                          <div className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-2 sm:mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Price Section */}
+                        <div className="font-bold text-slate-900 text-sm whitespace-nowrap">
+                            {service.price}₺
+                        </div>
+
+                        {/* Menu Section */}
+                        <div className="relative shrink-0">
                             <button 
-                              onClick={(e) => handleEdit(e, service)}
-                              className="w-full flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 text-left transition-colors"
+                                onClick={(e) => toggleMenu(e, service.id)}
+                                className={`p-1.5 rounded-lg transition-colors ${openMenuId === service.id ? 'bg-slate-100 text-black' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50'}`}
                             >
-                              <Pencil size={16} className="mr-2" /> Düzenle
+                                <MoreVertical size={18} />
                             </button>
-                            <div className="h-[1px] bg-slate-100 w-full"></div>
-                            <button 
-                              onClick={(e) => handleDelete(e, service.id)}
-                              className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 text-left transition-colors"
-                            >
-                              <Trash2 size={16} className="mr-2" /> Sil
-                            </button>
-                          </div>
-                        )}
-                      </div>
+
+                            {/* Dropdown Popover */}
+                            {openMenuId === service.id && (
+                                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <button 
+                                        onClick={(e) => handleEdit(e, service)}
+                                        className="w-full flex items-center px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 text-left transition-colors"
+                                    >
+                                        <Pencil size={14} className="mr-2" /> Düzenle
+                                    </button>
+                                    <div className="h-[1px] bg-slate-50 w-full"></div>
+                                    <button 
+                                        onClick={(e) => handleDelete(e, service.id)}
+                                        className="w-full flex items-center px-3 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 text-left transition-colors"
+                                    >
+                                        <Trash2 size={14} className="mr-2" /> Sil
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                  </div>
                 </div>
               ))
             )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <button 
+        onClick={handleAdd}
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-105 active:scale-95 transition-all"
+        aria-label="Yeni Hizmet Ekle"
+      >
+        <Plus size={28} />
+      </button>
 
       <ServiceModal 
         isOpen={isModalOpen}
