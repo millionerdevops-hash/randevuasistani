@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
-import { Card, Button, Input, TimePicker, PhoneInput, formatPhoneNumber } from '../components/ui/LayoutComponents';
-import { Phone, Mail, Calendar, Edit2, Clock, CheckCircle, Wallet, Award, Save, X, CalendarCheck, Trash2, ChevronRight } from 'lucide-react';
+import { Card, Button, Input, TimePicker, PhoneInput, formatPhoneNumber, Select } from '../components/ui/LayoutComponents';
+import { Phone, Mail, Calendar, Edit2, Clock, CheckCircle, Wallet, Award, Save, X, CalendarCheck, Trash2, ChevronRight, User, ChevronDown } from 'lucide-react';
 import { AppointmentModal } from '../components/AppointmentModal';
 import { LeaveModal } from '../components/LeaveModal';
 import { Staff, WorkingHour } from '../types';
@@ -99,7 +99,7 @@ export const StaffPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in">
+    <div className="space-y-6 animate-in fade-in pb-20">
       {/* Standardized Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -112,386 +112,329 @@ export const StaffPage = () => {
         </div>
       </div>
 
-      {/* Staff Selector */}
-      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+      {/* Staff Selector - Mobile Optimized */}
+      <div className="md:hidden">
+         <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Personel Seç</label>
+         <div className="relative">
+            <select 
+                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 appearance-none font-semibold text-slate-800 focus:ring-2 focus:ring-black focus:outline-none"
+                value={selectedStaffId}
+                onChange={(e) => { setSelectedStaffId(Number(e.target.value)); setIsEditing(false); setIsEditingHours(false); setActiveTab("Genel Bakış"); }}
+            >
+                {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16} />
+         </div>
+      </div>
+
+      {/* Staff Selector - Desktop */}
+      <div className="hidden md:flex gap-3 overflow-x-auto pb-2 no-scrollbar">
         {staff.map(s => (
           <button
             key={s.id}
             onClick={() => { setSelectedStaffId(s.id); setIsEditing(false); setIsEditingHours(false); setActiveTab("Genel Bakış"); }}
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 border ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-3 border ${
               selectedStaffId === s.id 
-                ? 'bg-black text-white border-black shadow-md transform scale-105' 
+                ? 'bg-black text-white border-black shadow-md' 
                 : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
             }`}
           >
-            <img src={`https://i.pravatar.cc/50?img=${s.id + 25}`} alt="" className="w-6 h-6 rounded-full object-cover" />
+            <img src={`https://i.pravatar.cc/50?img=${s.id + 25}`} alt="" className="w-8 h-8 rounded-full object-cover border border-white/20" />
             {s.name}
           </button>
         ))}
       </div>
 
-      {/* Profile Header */}
-      <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 transition-all">
-        <div className="relative group shrink-0">
-            <img 
-                src={`https://i.pravatar.cc/300?img=${selectedStaff.id + 25}`} 
-                alt={selectedStaff.name} 
-                className="h-24 w-24 md:h-32 md:w-32 rounded-full object-cover border-4 border-slate-50 shadow-sm"
-            />
-        </div>
-        
-        <div className="flex-1 text-center md:text-left w-full">
-            {isEditing ? (
-                <div className="space-y-4 max-w-md mx-auto md:mx-0 animate-in fade-in">
+      {/* Profile Header Card */}
+      <div className="bg-white rounded-2xl p-4 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
+
+        {isEditing ? (
+             <div className="space-y-4 max-w-lg animate-in fade-in relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-bold text-lg">Profili Düzenle</h2>
+                    <button onClick={cancelEdit} className="p-2 bg-slate-100 rounded-full text-slate-500"><X size={18}/></button>
+                </div>
+                <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Ad Soyad</label>
+                    <Input value={editForm.name || ''} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Email</label>
+                        <Input value={editForm.email || ''} onChange={(e) => setEditForm({...editForm, email: e.target.value})} />
+                        </div>
+                        <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Telefon</label>
+                        <PhoneInput value={editForm.phone || ''} onChange={(val) => setEditForm({...editForm, phone: val})} />
+                        </div>
+                </div>
+                <div className="pt-2 flex gap-3">
+                     <Button variant="black" onClick={saveEdit} className="flex-1">Kaydet</Button>
+                </div>
+            </div>
+        ) : (
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
+                <div className="flex items-center gap-4 md:gap-6">
+                    <img 
+                        src={`https://i.pravatar.cc/300?img=${selectedStaff.id + 25}`} 
+                        alt={selectedStaff.name} 
+                        className="h-20 w-20 md:h-28 md:w-28 rounded-full object-cover border-4 border-slate-50 shadow-sm shrink-0"
+                    />
                     <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Ad Soyad</label>
-                        <Input value={editForm.name || ''} onChange={(e) => setEditForm({...editForm, name: e.target.value})} placeholder="Ad Soyad" />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                         <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Email</label>
-                            <Input value={editForm.email || ''} onChange={(e) => setEditForm({...editForm, email: e.target.value})} />
-                         </div>
-                         <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase block text-left">Telefon</label>
-                            <PhoneInput value={editForm.phone || ''} onChange={(val) => setEditForm({...editForm, phone: val})} />
-                         </div>
+                        <h1 className="text-xl md:text-3xl font-bold text-slate-900 leading-tight">{selectedStaff.name}</h1>
+                        <div className="flex flex-col gap-1 mt-2 text-sm text-slate-500">
+                            <span className="flex items-center gap-2"><Mail size={14} className="text-slate-400"/> {selectedStaff.email}</span>
+                            <span className="flex items-center gap-2"><Phone size={14} className="text-slate-400"/> {formatPhoneNumber(selectedStaff.phone)}</span>
+                        </div>
                     </div>
                 </div>
-            ) : (
-                <>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">{selectedStaff.name}</h1>
-                    <div className="flex flex-col sm:flex-row gap-3 text-slate-500 justify-center md:justify-start items-center flex-wrap">
-                        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-sm hover:bg-slate-100 transition-colors">
-                            <Mail size={14}/> {selectedStaff.email}
-                        </span>
-                        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-sm hover:bg-slate-100 transition-colors">
-                            <Phone size={14}/> {formatPhoneNumber(selectedStaff.phone)}
-                        </span>
-                    </div>
-                </>
-            )}
-        </div>
-
-        <div className="flex gap-3 self-center md:self-start mt-2 shrink-0 w-full md:w-auto justify-center md:justify-end">
-             {isEditing ? (
-                 <>
-                    <Button variant="outline" onClick={cancelEdit} className="h-10 px-5 flex-1 md:flex-none">
-                         <X size={16} className="mr-2"/> İptal
+                
+                <div className="flex gap-2 w-full md:w-auto md:ml-auto mt-2 md:mt-0">
+                    <Button variant="outline" onClick={startEdit} className="flex-1 md:flex-none h-10 px-4 text-xs">
+                        <Edit2 size={14} className="mr-2"/> Düzenle
                     </Button>
-                    <Button variant="black" onClick={saveEdit} className="h-10 px-5 flex-1 md:flex-none">
-                         <Save size={16} className="mr-2"/> Kaydet
+                    <Button variant="black" onClick={() => setIsAppointmentModalOpen(true)} className="flex-1 md:flex-none h-10 px-4 text-xs shadow-lg shadow-slate-200">
+                        <Calendar size={14} className="mr-2"/> Randevu
                     </Button>
-                 </>
-             ) : (
-                 <>
-                    <Button variant="black" onClick={() => setIsAppointmentModalOpen(true)} className="h-10 shadow-lg shadow-indigo-100 flex-1 md:flex-none">
-                        Yeni Randevu <Calendar size={16} className="ml-2"/>
-                    </Button>
-                    <Button variant="outline" onClick={startEdit} className="h-10 flex-1 md:flex-none">
-                        Düzenle <Edit2 size={16} className="ml-2"/>
-                    </Button>
-                 </>
-             )}
-        </div>
+                </div>
+            </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Tabs */}
-        <Card className="p-4 h-fit lg:col-span-1 border-0 shadow-none bg-transparent lg:bg-white lg:border lg:border-slate-100 lg:shadow-sm">
-           <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
+      {/* Tabs */}
+      <div className="bg-white border-b border-slate-200 sticky top-16 md:static z-20 -mx-4 px-4 md:mx-0 md:px-0 md:rounded-xl md:border md:shadow-sm">
+          <div className="flex gap-4 overflow-x-auto no-scrollbar">
              {tabs.map(tab => (
                <button
                  key={tab}
                  onClick={() => setActiveTab(tab)}
-                 className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+                 className={`py-3 px-1 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                    activeTab === tab 
-                     ? 'bg-slate-900 text-white shadow-md' 
-                     : 'bg-white lg:bg-transparent text-slate-600 hover:bg-slate-100 border border-slate-200 lg:border-0'
+                     ? 'border-black text-black' 
+                     : 'border-transparent text-slate-500 hover:text-slate-800'
                  }`}
                >
                  {tab}
                </button>
              ))}
            </div>
-        </Card>
+      </div>
 
-        {/* Right Content */}
-        <div className="lg:col-span-3">
+      {/* Content Area */}
+      <div>
            
-           {/* GENEL BAKIŞ TAB */}
+           {/* GENEL BAKIŞ */}
            {activeTab === "Genel Bakış" && (
              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="p-6 flex flex-col items-center text-center hover:border-indigo-200 transition-colors">
-                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-3">
-                            <Wallet size={24} />
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                    <Card className="p-4 flex flex-col justify-between h-28 border border-indigo-100 bg-indigo-50/30">
+                        <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-2">
+                            <Wallet size={18} />
                         </div>
-                        <div className="text-2xl font-bold text-slate-900">{totalRevenue.toLocaleString()} ₺</div>
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Toplam Kazanç</div>
+                        <div>
+                            <div className="text-xl font-bold text-slate-900">{totalRevenue.toLocaleString()} ₺</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Toplam Kazanç</div>
+                        </div>
                     </Card>
-                    <Card className="p-6 flex flex-col items-center text-center hover:border-indigo-200 transition-colors">
-                        <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mb-3">
-                            <CheckCircle size={24} />
+                    <Card className="p-4 flex flex-col justify-between h-28 border border-green-100 bg-green-50/30">
+                        <div className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-2">
+                            <CheckCircle size={18} />
                         </div>
-                        <div className="text-2xl font-bold text-slate-900">{completedCount}</div>
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Tamamlanan</div>
+                        <div>
+                            <div className="text-xl font-bold text-slate-900">{completedCount}</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tamamlanan</div>
+                        </div>
                     </Card>
-                    <Card className="p-6 flex flex-col items-center text-center hover:border-indigo-200 transition-colors">
-                        <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3">
-                            <Award size={24} />
+                    <Card className="p-4 flex flex-col justify-between h-28 border border-amber-100 bg-amber-50/30 col-span-2 md:col-span-1">
+                        <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-2">
+                            <Award size={18} />
                         </div>
-                        <div className="text-2xl font-bold text-slate-900">4.9</div>
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Puan</div>
+                        <div>
+                            <div className="text-xl font-bold text-slate-900">4.9</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Puan</div>
+                        </div>
                     </Card>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 mt-8 mb-4">Yaklaşan Randevular ({upcomingCount})</h3>
-                <Card className="overflow-hidden p-0">
-                    {upcomingCount > 0 ? (
-                        <div className="divide-y divide-slate-100">
-                             {staffAppointments
-                                .filter(a => a.status === 'confirmed')
-                                .slice(0, 5)
-                                .map(apt => (
-                                    <div key={apt.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center text-xs font-bold border border-indigo-100">
-                                                <span>{format(parseISO(apt.date), 'dd')}</span>
-                                                <span className="uppercase">{format(parseISO(apt.date), 'MMM', {locale: tr})}</span>
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-slate-900">{getCustomerName(apt.customerId)}</div>
-                                                <div className="text-sm text-slate-500">{getServiceName(apt.serviceIds)}</div>
-                                            </div>
+                {/* Upcoming List */}
+                <div>
+                    <h3 className="text-sm font-bold text-slate-900 mb-3 px-1">Yaklaşan Randevular</h3>
+                    <div className="space-y-3">
+                        {upcomingCount > 0 ? (
+                            staffAppointments
+                            .filter(a => a.status === 'confirmed')
+                            .slice(0, 5)
+                            .map(apt => (
+                                <div key={apt.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex flex-col items-center justify-center text-[10px] font-bold leading-tight">
+                                            <span className="text-sm">{format(parseISO(apt.date), 'dd')}</span>
+                                            <span className="uppercase">{format(parseISO(apt.date), 'MMM', {locale: tr})}</span>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="font-mono font-bold text-slate-900">{apt.startTime}</div>
-                                            <div className="text-xs text-slate-400">{apt.totalPrice} ₺</div>
+                                        <div>
+                                            <div className="font-bold text-slate-900 text-sm">{getCustomerName(apt.customerId)}</div>
+                                            <div className="text-xs text-slate-500 truncate max-w-[150px]">{getServiceName(apt.serviceIds)}</div>
                                         </div>
                                     </div>
-                                ))
-                             }
-                        </div>
-                    ) : (
-                        <div className="p-8 text-center text-slate-500">
-                            Yaklaşan randevu bulunmuyor.
-                        </div>
-                    )}
-                </Card>
+                                    <div className="text-right">
+                                        <div className="bg-black text-white text-xs px-2 py-1 rounded font-bold">{apt.startTime}</div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-slate-400 bg-white border border-dashed border-slate-200 rounded-xl text-sm">
+                                Yaklaşan randevu yok.
+                            </div>
+                        )}
+                    </div>
+                </div>
              </div>
            )}
 
-           {/* RANDEVULAR TAB */}
+           {/* RANDEVULAR */}
            {activeTab === "Randevular" && (
-             <Card className="overflow-hidden animate-in fade-in slide-in-from-bottom-2 p-0">
-                 {/* 1. Desktop Table */}
-                 <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
-                            <tr>
-                                <th className="px-6 py-4 text-left">Tarih</th>
-                                <th className="px-6 py-4 text-left">Müşteri</th>
-                                <th className="px-6 py-4 text-left">Hizmet</th>
-                                <th className="px-6 py-4 text-left">Durum</th>
-                                <th className="px-6 py-4 text-right">Tutar</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {staffAppointments.length > 0 ? (
-                                staffAppointments.sort((a,b) => b.id - a.id).map(apt => (
-                                    <tr key={apt.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {format(parseISO(apt.date), 'd MMM yyyy', {locale: tr})} <br/>
-                                            <span className="text-xs text-slate-400">{apt.startTime}</span>
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-slate-900">{getCustomerName(apt.customerId)}</td>
-                                        <td className="px-6 py-4 text-slate-600">{getServiceName(apt.serviceIds)}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                apt.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                apt.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                apt.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                                            }`}>
-                                                {apt.status === 'confirmed' ? 'Onaylı' : 
-                                                 apt.status === 'pending' ? 'Bekliyor' :
-                                                 apt.status === 'completed' ? 'Tamamlandı' : 'İptal'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-slate-900">{apt.totalPrice} ₺</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                                        Kayıtlı randevu bulunamadı.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                 </div>
-
-                 {/* 2. Mobile Cards */}
-                 <div className="md:hidden">
-                    {staffAppointments.length > 0 ? (
-                         <div className="divide-y divide-slate-100">
-                             {staffAppointments.sort((a,b) => b.id - a.id).map(apt => (
-                                 <div key={apt.id} className="p-4 flex flex-col gap-2">
-                                     <div className="flex justify-between items-start">
-                                         <div className="font-bold text-slate-900">{getCustomerName(apt.customerId)}</div>
-                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                            apt.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                            apt.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                            apt.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                                         }`}>
-                                            {apt.status === 'confirmed' ? 'Onaylı' : 
-                                             apt.status === 'pending' ? 'Bekliyor' :
-                                             apt.status === 'completed' ? 'Tamamlandı' : 'İptal'}
-                                         </span>
-                                     </div>
-                                     <div className="text-sm text-slate-600">{getServiceName(apt.serviceIds)}</div>
-                                     <div className="flex justify-between items-center text-xs text-slate-500 mt-1">
-                                         <div>
-                                            {format(parseISO(apt.date), 'd MMM yyyy', {locale: tr})} • {apt.startTime}
-                                         </div>
-                                         <div className="font-bold text-slate-900 text-sm">{apt.totalPrice} ₺</div>
-                                     </div>
+             <div className="space-y-3 animate-in fade-in">
+                 {staffAppointments.length > 0 ? (
+                     staffAppointments.sort((a,b) => b.id - a.id).map(apt => (
+                         <div key={apt.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+                             <div className="flex justify-between items-start">
+                                 <div>
+                                    <div className="font-bold text-slate-900">{getCustomerName(apt.customerId)}</div>
+                                    <div className="text-xs text-slate-500">{getServiceName(apt.serviceIds)}</div>
                                  </div>
-                             ))}
+                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    apt.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    apt.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    apt.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                                 }`}>
+                                    {apt.status === 'confirmed' ? 'Onaylı' : apt.status === 'pending' ? 'Bekliyor' : apt.status === 'completed' ? 'Bitti' : 'İptal'}
+                                 </span>
+                             </div>
+                             <div className="flex items-center justify-between pt-2 border-t border-slate-50 mt-1">
+                                 <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                                     <Calendar size={12}/> {format(parseISO(apt.date), 'd MMM', {locale: tr})}
+                                     <Clock size={12} className="ml-1"/> {apt.startTime}
+                                 </div>
+                                 <div className="font-bold text-slate-900 text-sm">{apt.totalPrice} ₺</div>
+                             </div>
                          </div>
-                    ) : (
-                        <div className="p-8 text-center text-slate-400">Kayıtlı randevu bulunamadı.</div>
-                    )}
-                 </div>
-             </Card>
+                     ))
+                 ) : (
+                    <div className="p-8 text-center text-slate-400 bg-white border border-dashed border-slate-200 rounded-xl text-sm">
+                        Kayıt yok.
+                    </div>
+                 )}
+             </div>
            )}
 
-           {/* ÇALIŞMA SAATLERİ TAB */}
+           {/* ÇALIŞMA SAATLERİ */}
            {activeTab === "Çalışma Saatleri" && (
-             <Card className="p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2">
-               <div className="flex justify-between items-center mb-6">
-                 <div>
-                    <h2 className="text-lg md:text-xl font-bold text-slate-900">Haftalık Program</h2>
-                    <p className="text-slate-500 text-sm">Standart çalışma saatlerini düzenleyin.</p>
+             <div className="space-y-4 animate-in fade-in">
+                 {/* Toolbar */}
+                 <div className="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                     <h3 className="font-bold text-slate-900 text-sm">Haftalık Program</h3>
+                     {isEditingHours ? (
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={cancelEditHours} className="h-8 text-xs px-3">İptal</Button>
+                            <Button variant="black" onClick={saveEditHours} className="h-8 text-xs px-3">Kaydet</Button>
+                        </div>
+                     ) : (
+                        <Button variant="outline" onClick={startEditHours} className="h-8 text-xs px-3 bg-slate-50">Düzenle</Button>
+                     )}
                  </div>
-                 {isEditingHours ? (
-                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={cancelEditHours} className="h-9 text-xs px-3">İptal</Button>
-                        <Button variant="black" onClick={saveEditHours} className="h-9 text-xs px-3">Kaydet</Button>
-                     </div>
-                 ) : (
-                     <Button variant="outline" onClick={startEditHours} className="h-9 text-xs px-3">Düzenle</Button>
-                 )}
-               </div>
-               
-               <div className="space-y-1">
-                 {isEditingHours 
-                    ? editedHours.map((row, i) => (
-                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 gap-4">
-                             <div className="flex items-center gap-3 w-32 shrink-0">
-                                <input 
-                                    type="checkbox" 
-                                    checked={row.isOpen} 
-                                    onChange={(e) => handleHourChange(i, 'isOpen', e.target.checked)}
-                                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                />
-                                <span className={`font-semibold ${row.isOpen ? 'text-slate-800' : 'text-slate-400'}`}>{row.day}</span>
-                             </div>
-                             
-                             <div className="flex items-center gap-2 flex-1 justify-center">
-                                 {row.isOpen ? (
-                                     <>
+
+                 {/* Hours List */}
+                 <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    {isEditingHours 
+                        ? editedHours.map((row, i) => (
+                            <div key={i} className="p-4 border-b border-slate-100 last:border-0 flex flex-col gap-3">
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={row.isOpen} 
+                                            onChange={(e) => handleHourChange(i, 'isOpen', e.target.checked)}
+                                            className="w-5 h-5 rounded border-slate-300 text-black focus:ring-black"
+                                        />
+                                        <span className={`font-bold ${row.isOpen ? 'text-slate-900' : 'text-slate-400'}`}>{row.day}</span>
+                                    </div>
+                                    <span className="text-xs text-slate-400 font-medium">{row.isOpen ? 'AÇIK' : 'KAPALI'}</span>
+                                 </div>
+                                 
+                                 {row.isOpen && (
+                                     <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg">
                                         <TimePicker 
                                             value={row.startTime} 
                                             onChange={(val) => handleHourChange(i, 'startTime', val)}
-                                            className="w-28"
+                                            className="flex-1"
                                         />
-                                        <span className="text-slate-400">-</span>
+                                        <span className="text-slate-400 text-xs font-bold">-</span>
                                         <TimePicker 
                                             value={row.endTime} 
                                             onChange={(val) => handleHourChange(i, 'endTime', val)}
-                                            className="w-28"
+                                            className="flex-1"
                                         />
-                                     </>
-                                 ) : (
-                                     <span className="text-slate-400 italic text-sm py-2">Çalışma Yok</span>
+                                     </div>
                                  )}
-                             </div>
-                        </div>
-                    ))
-                    : (selectedStaff.workingHours || []).map((row, i) => (
-                       <div key={i} className="flex justify-between items-center p-4 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                         <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${!row.isOpen ? 'bg-red-300' : 'bg-green-400'}`}></div>
-                            <span className="font-semibold text-slate-800 w-24">{row.day}</span>
-                         </div>
-                         <span className={`flex-1 text-center font-mono ${!row.isOpen ? 'text-slate-400' : 'text-slate-700'}`}>
-                             {row.isOpen ? `${row.startTime} - ${row.endTime}` : 'Çalışmıyor'}
-                         </span>
-                         <span className="text-slate-400 text-sm w-12 text-right">
-                             {row.isOpen ? calculateDuration(row.startTime, row.endTime) : ''}
-                         </span>
-                       </div>
-                   ))
-                 }
-               </div>
-             </Card>
-           )}
-
-           {/* İZİNLER TAB */}
-           {activeTab === "İzinler" && (
-               <Card className="p-8 animate-in fade-in slide-in-from-bottom-2 text-center">
-                   <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                       <CalendarCheck size={32} />
-                   </div>
-                   <h3 className="text-lg font-bold text-slate-900 mb-2">İzin Kayıtları</h3>
-                   <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-                       Personelin yıllık izin, rapor ve diğer izin durumlarını buradan yönetebilirsiniz.
-                   </p>
-                   
-                   {staffLeaves.length > 0 ? (
-                       <div className="border border-slate-100 rounded-xl overflow-hidden mb-6 text-left">
-                           <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase flex justify-between">
-                               <span>Tarih Aralığı</span>
-                               <span>Tür / İşlem</span>
-                           </div>
-                           {staffLeaves.map(leave => (
-                               <div key={leave.id} className="p-4 flex justify-between items-center hover:bg-slate-50 border-b border-slate-50 last:border-0 group">
-                                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                       <div className="flex items-center gap-2 text-slate-700 font-medium text-sm sm:text-base">
-                                            <Calendar size={16} className="text-slate-400"/>
-                                            {format(parseISO(leave.startDate), 'd MMM', {locale: tr})} 
-                                            <span className="text-slate-400 text-sm mx-1">-</span> 
-                                            {format(parseISO(leave.endDate), 'd MMM yyyy', {locale: tr})}
-                                       </div>
-                                       {leave.description && <span className="text-xs text-slate-400 italic hidden sm:inline">({leave.description})</span>}
-                                   </div>
-                                   <div className="flex items-center gap-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${getLeaveColor(leave.type)}`}>
-                                            {leave.type}
-                                        </span>
-                                        <button 
-                                            onClick={() => deleteLeave(leave.id)}
-                                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                                            title="İzni Sil"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                   </div>
+                            </div>
+                        ))
+                        : (selectedStaff.workingHours || []).map((row, i) => (
+                           <div key={i} className="p-4 border-b border-slate-100 last:border-0 flex justify-between items-center hover:bg-slate-50/50">
+                               <div className="flex items-center gap-3">
+                                   <div className={`w-2 h-2 rounded-full shrink-0 ${row.isOpen ? 'bg-green-500' : 'bg-red-300'}`}></div>
+                                   <span className="font-semibold text-slate-800 text-sm">{row.day}</span>
                                </div>
-                           ))}
-                       </div>
-                   ) : (
-                       <div className="p-4 text-slate-400 text-sm mb-6 bg-slate-50 rounded-xl">
-                           Kayıtlı izin bulunmuyor.
-                       </div>
-                   )}
-
-                   <Button variant="black" onClick={() => setIsLeaveModalOpen(true)}>Yeni İzin Ekle</Button>
-               </Card>
+                               <div className={`text-sm font-medium ${row.isOpen ? 'text-slate-900' : 'text-slate-400 italic'}`}>
+                                   {row.isOpen ? `${row.startTime} - ${row.endTime}` : 'Tatil'}
+                               </div>
+                           </div>
+                       ))
+                    }
+                 </div>
+             </div>
            )}
-        </div>
+
+           {/* İZİNLER */}
+           {activeTab === "İzinler" && (
+             <div className="space-y-4 animate-in fade-in">
+                 <Button variant="black" onClick={() => setIsLeaveModalOpen(true)} className="w-full shadow-md">
+                    <CalendarCheck size={16} className="mr-2" /> Yeni İzin Ekle
+                 </Button>
+
+                 <div className="space-y-3">
+                    {staffLeaves.length > 0 ? (
+                        staffLeaves.map(leave => (
+                            <div key={leave.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${getLeaveColor(leave.type)}`}>
+                                        {leave.type}
+                                    </span>
+                                    <button 
+                                        onClick={() => deleteLeave(leave.id)}
+                                        className="text-slate-300 hover:text-red-500 p-1"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
+                                    <Calendar size={16} className="text-slate-400" />
+                                    {format(parseISO(leave.startDate), 'd MMM', {locale: tr})} - {format(parseISO(leave.endDate), 'd MMM yyyy', {locale: tr})}
+                                </div>
+                                {leave.description && <div className="text-sm text-slate-500 mt-1 border-t border-slate-50 pt-2">{leave.description}</div>}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-8 text-center text-slate-400 bg-white border border-dashed border-slate-200 rounded-xl text-sm flex flex-col items-center gap-2">
+                            <CalendarCheck size={24} className="opacity-20"/>
+                            <span>İzin kaydı bulunmuyor.</span>
+                        </div>
+                    )}
+                 </div>
+             </div>
+           )}
       </div>
 
       <AppointmentModal 

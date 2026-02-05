@@ -6,24 +6,26 @@ import { CustomerModal } from '../components/CustomerModal';
 import { Customer } from '../types';
 
 export const CustomersPage = () => {
-  const { customers, addCustomer, deleteCustomer } = useStore();
+  const { customers, deleteCustomer } = useStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   
-  // New Customer State
-  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+  // Modal State: We use the same modal for Adding (null) and Viewing (object)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone.includes(searchTerm)
   );
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    addCustomer(newCustomer);
-    setNewCustomer({ name: '', phone: '', email: '' });
-    setIsAdding(false);
+  const handleOpenAddModal = () => {
+    setSelectedCustomer(null); // Null means "Create Mode"
+    setIsModalOpen(true);
+  };
+
+  const handleOpenViewModal = (customer: Customer) => {
+    setSelectedCustomer(customer); // Object means "View/Edit Mode"
+    setIsModalOpen(true);
   };
 
   return (
@@ -48,47 +50,11 @@ export const CustomersPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button onClick={() => setIsAdding(!isAdding)}>
+          <Button onClick={handleOpenAddModal}>
             <UserPlus size={18} className="mr-2" /> Yeni
           </Button>
         </div>
       </div>
-
-      {isAdding && (
-        <Card className="p-6 bg-slate-50 border-indigo-100 animate-in fade-in slide-in-from-top-4">
-          <h3 className="font-bold mb-4">Yeni Müşteri Ekle</h3>
-          <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="md:col-span-1">
-              <Input 
-                placeholder="Ad Soyad" 
-                value={newCustomer.name}
-                onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
-                required
-              />
-            </div>
-            <div className="md:col-span-1">
-              <PhoneInput 
-                value={newCustomer.phone}
-                onChange={val => setNewCustomer({...newCustomer, phone: val})}
-                required
-              />
-            </div>
-            <div className="md:col-span-1">
-              <Input 
-                placeholder="Email" 
-                type="email"
-                value={newCustomer.email}
-                onChange={e => setNewCustomer({...newCustomer, email: e.target.value})}
-                required
-              />
-            </div>
-            <div className="flex gap-2 md:col-span-1">
-              <Button type="submit" className="flex-1">Kaydet</Button>
-              <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1">İptal</Button>
-            </div>
-          </form>
-        </Card>
-      )}
 
       {/* Grid updated to 4 columns on large screens */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -96,7 +62,7 @@ export const CustomersPage = () => {
           <Card 
             key={customer.id} 
             className="p-6 hover:shadow-md transition-all group relative cursor-pointer hover:border-indigo-200"
-            onClick={() => setSelectedCustomer(customer)}
+            onClick={() => handleOpenViewModal(customer)}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -138,9 +104,9 @@ export const CustomersPage = () => {
       </div>
 
       <CustomerModal 
-        isOpen={!!selectedCustomer}
+        isOpen={isModalOpen}
         customer={selectedCustomer}
-        onClose={() => setSelectedCustomer(null)}
+        onClose={() => setIsModalOpen(false)}
       />
     </div>
   );

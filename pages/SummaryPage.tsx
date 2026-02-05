@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, Button, formatPhoneNumber } from '../components/ui/LayoutComponents';
-import { Calendar, UserPlus, Tag, Gift, Search, MoreHorizontal, ChevronRight, Clock, User } from 'lucide-react';
+import { Calendar, UserPlus, Tag, Gift, Search, MoreHorizontal, ChevronRight, Clock, User, ChevronDown } from 'lucide-react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -71,8 +71,15 @@ export const SummaryPage = () => {
     "Müşteri Yorumları"
   ];
 
+  const stats = [
+    { title: 'Randevu', count: todayAppointments, icon: Calendar, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { title: 'Ön Görüşme', count: mockPreInterviews, icon: UserPlus, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { title: 'Ürün Satışı', count: mockProductSales, icon: Tag, color: 'text-sky-600', bg: 'bg-sky-50' },
+    { title: 'Paket Satışı', count: mockPackageSales, icon: Gift, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' }
+  ];
+
   return (
-    <div className="space-y-6 animate-in fade-in">
+    <div className="space-y-4 md:space-y-6 animate-in fade-in pb-20 md:pb-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -85,21 +92,18 @@ export const SummaryPage = () => {
         </div>
       </div>
 
-      {/* Top Colorful Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-            { title: 'Randevu', count: todayAppointments, icon: Calendar, color: 'bg-[#22d3ee]' },
-            { title: 'Ön Görüşme', count: mockPreInterviews, icon: UserPlus, color: 'bg-[#9333ea]' },
-            { title: 'Ürün Satışı', count: mockProductSales, icon: Tag, color: 'bg-[#0ea5e9]' },
-            { title: 'Paket Satışı', count: mockPackageSales, icon: Gift, color: 'bg-[#e879f9]' }
-        ].map((item, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex h-24 relative group hover:shadow-md transition-shadow">
-                <div className="flex-1 p-4 flex flex-col justify-center pl-6">
-                    <div className="text-3xl font-extrabold text-slate-800">{item.count}</div>
-                    <div className="text-sm font-medium text-slate-500 mt-1">{item.title}</div>
+      {/* 1. Compact 2x2 Grid for Mobile, 4x1 for Desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {stats.map((item, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5 flex flex-col justify-between h-full hover:border-indigo-200 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs md:text-sm font-semibold text-slate-500 truncate mr-2">{item.title}</span>
+                    <div className={`p-1.5 md:p-2 rounded-lg ${item.bg} ${item.color} shrink-0`}>
+                        <item.icon size={16} strokeWidth={2.5} className="md:w-5 md:h-5" />
+                    </div>
                 </div>
-                <div className={`w-24 ${item.color} flex items-center justify-center text-white`}>
-                    <item.icon size={32} strokeWidth={2.5} />
+                <div className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
+                    {item.count}
                 </div>
             </div>
         ))}
@@ -107,14 +111,32 @@ export const SummaryPage = () => {
 
       {/* Main Content Area */}
       <Card className="p-0 border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
-         {/* Tabs */}
-         <div className="p-4 border-b border-slate-200">
-             <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+         
+         {/* 2. Tabs / Filter Section */}
+         <div className="border-b border-slate-200 bg-slate-50/50">
+             
+             {/* Mobile: Dropdown Selector */}
+             <div className="md:hidden p-4">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Görünüm</label>
+                <div className="relative">
+                    <select 
+                        value={activeTab}
+                        onChange={(e) => setActiveTab(e.target.value)}
+                        className="w-full h-11 appearance-none bg-white border border-slate-300 text-slate-900 text-sm rounded-xl px-4 focus:outline-none focus:ring-2 focus:ring-black font-medium shadow-sm"
+                    >
+                        {tabs.map(tab => <option key={tab} value={tab}>{tab}</option>)}
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-3.5 text-slate-500 pointer-events-none" />
+                </div>
+             </div>
+
+             {/* Desktop: Horizontal Tabs */}
+             <div className="hidden md:flex items-center gap-2 overflow-x-auto p-4 no-scrollbar">
                  {tabs.map(tab => (
                      <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all border ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all border ${
                             activeTab === tab
                              ? 'bg-black text-white border-black shadow-sm' 
                              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -126,16 +148,15 @@ export const SummaryPage = () => {
              </div>
          </div>
 
-         {/* Sub-Header: Filters & Search */}
-         <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+         {/* Sub-Header: Search & Pagination Controls */}
+         <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white border-b border-slate-100">
             <div className="flex items-center gap-4 w-full sm:w-auto">
                <span className="text-sm font-medium text-slate-500 whitespace-nowrap hidden sm:inline">
-                   Sayfada 
-                   <select className="mx-2 p-1 rounded border border-slate-200 text-slate-700 text-xs font-bold focus:outline-none">
+                   Göster
+                   <select className="mx-2 p-1 rounded border border-slate-200 text-slate-700 text-xs font-bold focus:outline-none bg-slate-50">
                        <option>5</option>
                        <option>10</option>
                    </select> 
-                   kayıt göster
                </span>
             </div>
             
@@ -143,20 +164,20 @@ export const SummaryPage = () => {
                <div className="relative flex-1 sm:w-64">
                    <input 
                       type="text" 
-                      placeholder="Ara" 
+                      placeholder="Ara..." 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-3 pr-10 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+                      className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-all bg-slate-50 focus:bg-white"
                    />
-                   <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
+                   <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
                </div>
             </div>
          </div>
 
-         {/* 1. Desktop Table */}
+         {/* 3. Desktop Table */}
          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left">
-                <thead className="text-slate-900 font-bold border-b border-slate-100 bg-white">
+                <thead className="text-slate-500 font-medium border-b border-slate-100 bg-slate-50/50">
                     <tr>
                         <th className="px-6 py-4 whitespace-nowrap">Müşteri</th>
                         <th className="px-6 py-4 whitespace-nowrap">Telefon</th>
@@ -168,15 +189,15 @@ export const SummaryPage = () => {
                         <th className="px-6 py-4 whitespace-nowrap"></th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-white">
                     {filteredData.length > 0 ? (
                         filteredData.map((apt) => {
                             const customer = getCustomer(apt.customerId);
                             const staffMember = getStaff(apt.staffId);
                             return (
                                 <tr key={apt.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-slate-800">{customer?.name}</td>
-                                    <td className="px-6 py-4 text-slate-500 font-mono">{formatPhoneNumber(customer?.phone || "")}</td>
+                                    <td className="px-6 py-4 font-bold text-slate-800">{customer?.name}</td>
+                                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">{formatPhoneNumber(customer?.phone || "")}</td>
                                     <td className="px-6 py-4 text-slate-600">
                                         {getServices(apt.serviceIds)} <span className="text-slate-400 text-xs">({staffMember?.name.split(' ')[0]})</span>
                                     </td>
@@ -197,7 +218,7 @@ export const SummaryPage = () => {
             </table>
          </div>
 
-         {/* 2. Mobile Cards */}
+         {/* 4. Mobile Cards */}
          <div className="md:hidden">
              {filteredData.length > 0 ? (
                  <div className="divide-y divide-slate-100">
@@ -205,42 +226,45 @@ export const SummaryPage = () => {
                         const customer = getCustomer(apt.customerId);
                         const staffMember = getStaff(apt.staffId);
                         return (
-                            <div key={apt.id} className="p-4 flex flex-col gap-3">
+                            <div key={apt.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <div className="font-bold text-slate-900">{customer?.name}</div>
-                                        <div className="text-xs text-slate-500 font-mono">{formatPhoneNumber(customer?.phone || "")}</div>
+                                        <div className="font-bold text-slate-900 text-base">{customer?.name}</div>
+                                        <div className="text-xs text-slate-500 font-mono mt-0.5">{formatPhoneNumber(customer?.phone || "")}</div>
                                     </div>
                                     {getStatusBadge(apt.status)}
                                 </div>
                                 
-                                <div className="bg-slate-50 p-2 rounded text-sm text-slate-700">
+                                <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-lg text-sm text-slate-700 font-medium">
                                     {getServices(apt.serviceIds)}
                                 </div>
                                 
-                                <div className="flex items-center justify-between text-xs text-slate-500">
+                                <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
                                     <div className="flex gap-3">
-                                        <span className="flex items-center gap-1"><Calendar size={12}/> {format(parseISO(apt.date), 'dd.MM')}</span>
-                                        <span className="flex items-center gap-1"><Clock size={12}/> {apt.startTime}</span>
+                                        <span className="flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {format(parseISO(apt.date), 'dd.MM')}</span>
+                                        <span className="flex items-center gap-1.5"><Clock size={14} className="text-slate-400"/> {apt.startTime}</span>
                                     </div>
-                                    <div className="flex items-center gap-1"><User size={12}/> {staffMember?.name}</div>
+                                    <div className="flex items-center gap-1.5"><User size={14} className="text-slate-400"/> {staffMember?.name.split(' ')[0]}</div>
                                 </div>
                             </div>
                         )
                     })}
                  </div>
              ) : (
-                 <div className="p-8 text-center text-slate-400">Kayıt bulunamadı.</div>
+                 <div className="p-12 text-center text-slate-400 flex flex-col items-center">
+                    <Search size={32} className="mb-2 opacity-20" />
+                    <p>Kayıt bulunamadı.</p>
+                 </div>
              )}
          </div>
 
          {/* Footer */}
-         <div className="bg-white px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-             <div className="text-sm text-slate-500">Total {filteredData.length}</div>
+         <div className="bg-white px-4 md:px-6 py-4 border-t border-slate-100 flex items-center justify-between sticky bottom-0">
+             <div className="text-xs md:text-sm text-slate-500">Toplam {filteredData.length} kayıt</div>
              <div className="flex gap-1">
-                 <button className="px-3 py-1 text-xs border border-slate-200 rounded hover:bg-slate-50 text-slate-600">Önceki</button>
-                 <button className="px-3 py-1 text-xs bg-black text-white rounded font-medium">1</button>
-                 <button className="px-3 py-1 text-xs border border-slate-200 rounded hover:bg-slate-50 text-slate-600">Sonraki</button>
+                 <button className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-50 font-medium" disabled>Önceki</button>
+                 <button className="px-3 py-1.5 text-xs bg-black text-white rounded-lg font-medium shadow-sm">1</button>
+                 <button className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-50 font-medium" disabled>Sonraki</button>
              </div>
          </div>
       </Card>

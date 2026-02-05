@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { Button, Select } from '../components/ui/LayoutComponents';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown, Clock, Search, X, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown, Clock, Search, X, Plus } from 'lucide-react';
 import { 
   format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, 
   isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, 
-  subMonths, addMonths, subDays, isSameMonth, getDay, parseISO, addMinutes
+  subMonths, addMonths, subDays, isSameMonth, getDay, updateAppointment
 } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { AppointmentModal } from '../components/AppointmentModal';
@@ -64,9 +64,9 @@ export const CalendarPage = () => {
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = endOfWeek(currentDate, { weekStartsOn: 1 });
       if (start.getMonth() === end.getMonth()) {
-        return `${format(start, 'd')} - ${format(end, 'd MMMM yyyy', { locale: tr })}`;
+        return `${format(start, 'd')} - ${format(end, 'd MMMM', { locale: tr })}`;
       }
-      return `${format(start, 'd MMM', { locale: tr })} - ${format(end, 'd MMM yyyy', { locale: tr })}`;
+      return `${format(start, 'd MMM', { locale: tr })} - ${format(end, 'd MMM', { locale: tr })}`;
     }
     if (view === 'month') return format(currentDate, 'MMMM yyyy', { locale: tr });
     return '';
@@ -243,8 +243,8 @@ export const CalendarPage = () => {
   return (
     <div className="flex flex-col h-full space-y-4 animate-in fade-in relative">
       
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Page Header - Hidden on Mobile to save space */}
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Randevu Takvimi</h1>
            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
@@ -308,17 +308,19 @@ export const CalendarPage = () => {
             </div>
         )}
 
-        {/* Header Toolbar */}
-        <div className="flex flex-col lg:flex-row items-center justify-between p-4 border-b border-slate-200 gap-4 shrink-0 z-50 bg-white relative">
+        {/* Header Toolbar - Optimized for Mobile */}
+        <div className="flex flex-col lg:flex-row items-center justify-between p-3 md:p-4 border-b border-slate-200 gap-3 md:gap-4 shrink-0 z-30 bg-white sticky top-0">
             
-            {/* Left Side: Navigation & Staff */}
-            <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar pb-2 lg:pb-0">
-                <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200 shrink-0">
+            {/* Top Row on Mobile: Nav & View */}
+            <div className="flex items-center justify-between w-full lg:w-auto gap-2">
+                
+                {/* Date Navigation */}
+                <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200 shrink-0 flex-1 lg:flex-none justify-between lg:justify-start">
                     <button onClick={() => handleNavigate('prev')} className="p-1.5 hover:bg-white rounded-md transition-colors text-slate-600">
                         <ChevronLeft size={18} />
                     </button>
-                    <div className="flex items-center justify-center px-4 font-medium text-sm text-slate-800 whitespace-nowrap min-w-[150px] capitalize">
-                        <CalendarIcon size={14} className="mr-2 text-slate-400" />
+                    <div className="flex items-center justify-center px-2 md:px-4 font-medium text-sm text-slate-800 whitespace-nowrap capitalize truncate">
+                        <CalendarIcon size={14} className="mr-2 text-slate-400 hidden sm:inline" />
                         {headerTitle}
                     </div>
                     <button onClick={() => handleNavigate('next')} className="p-1.5 hover:bg-white rounded-md transition-colors text-slate-600">
@@ -326,48 +328,49 @@ export const CalendarPage = () => {
                     </button>
                 </div>
 
+                {/* Today Button - Icon on Mobile, Text on Desktop */}
                 <button 
                     onClick={() => setCurrentDate(new Date())} 
-                    className="text-sm font-medium text-slate-600 hover:text-black px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors shrink-0"
+                    className="text-sm font-medium text-slate-600 hover:text-black px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors shrink-0 border border-slate-200 lg:border-0"
+                    title="Bugün"
                 >
-                    Bugün
+                    <span className="hidden md:inline">Bugün</span>
+                    <span className="md:hidden">Bugün</span>
                 </button>
+            </div>
 
-                <div className="relative group min-w-[200px] shrink-0">
-                    <button className="flex items-center gap-3 pl-1 pr-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 transition-colors bg-white w-full shadow-sm text-slate-700">
-                        <img 
-                            src={`https://i.pravatar.cc/100?img=${selectedStaffId === 'all' ? '68' : (Number(selectedStaffId) + 25)}`}
-                            alt="Staff"
-                            className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <span className="text-sm font-medium truncate flex-1 text-left">
+            {/* Bottom Row on Mobile: Staff, View & Actions */}
+            <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto justify-between overflow-x-auto no-scrollbar">
+                
+                {/* Staff Selector */}
+                <div className="relative group min-w-[140px] md:min-w-[200px] shrink-0">
+                    <button className="flex items-center gap-2 md:gap-3 pl-1 md:pl-1 pr-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 transition-colors bg-white w-full shadow-sm text-slate-700 h-10">
+                         {/* Show avatar only on desktop or if it's 'all' */}
+                        <div className="hidden md:block">
+                            <img 
+                                src={`https://i.pravatar.cc/100?img=${selectedStaffId === 'all' ? '68' : (Number(selectedStaffId) + 25)}`}
+                                alt="Staff"
+                                className="w-8 h-8 rounded-full object-cover"
+                            />
+                        </div>
+                        <span className="text-xs md:text-sm font-medium truncate flex-1 text-left pl-2 md:pl-0">
                             {selectedStaffId === 'all' ? 'Tüm Çalışanlar' : staff.find(s => s.id === selectedStaffId)?.name}
                         </span>
                         <ChevronDown size={14} className="text-slate-400" />
                     </button>
                     <select 
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    value={selectedStaffId}
-                    onChange={(e) => setSelectedStaffId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        value={selectedStaffId}
+                        onChange={(e) => setSelectedStaffId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                     >
-                    <option value="all">Tüm Çalışanlar</option>
-                    {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        <option value="all">Tüm Çalışanlar</option>
+                        {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                 </div>
-            </div>
 
-            {/* Right Side: View & Action */}
-            <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
-                <Button 
-                    variant="outline" 
-                    onClick={() => setIsFinderOpen(!isFinderOpen)}
-                    className={`hidden sm:flex px-4 ${isFinderOpen ? 'bg-slate-100 border-slate-300' : ''}`}
-                >
-                    <Search size={16} className="mr-2" /> Müsaitlik Bul
-                </Button>
-
-                <div className="relative min-w-[120px]">
-                    <div className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+                {/* View Selector */}
+                <div className="relative min-w-[90px] md:min-w-[120px] shrink-0">
+                    <div className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer h-10">
                         <span>
                             {view === 'day' ? 'Günlük' : view === 'week' ? 'Haftalık' : 'Aylık'}
                         </span>
@@ -383,9 +386,20 @@ export const CalendarPage = () => {
                         <option value="month">Aylık</option>
                     </select>
                 </div>
+
+                {/* Desktop: Availability Finder */}
+                <Button 
+                    variant="outline" 
+                    onClick={() => setIsFinderOpen(!isFinderOpen)}
+                    className={`hidden md:flex px-4 ${isFinderOpen ? 'bg-slate-100 border-slate-300' : ''}`}
+                >
+                    <Search size={16} className="mr-2" /> Müsaitlik Bul
+                </Button>
                 
-                <Button onClick={() => { setSelectedDateForModal(undefined); setSelectedAppointmentForModal(null); setIsModalOpen(true); }} variant="black" className="w-full sm:w-auto shadow-md shadow-slate-300/50">
-                    Yeni Randevu
+                {/* New Appointment Button - Compact on Mobile */}
+                <Button onClick={() => { setSelectedDateForModal(undefined); setSelectedAppointmentForModal(null); setIsModalOpen(true); }} variant="black" className="shadow-md shadow-slate-300/50 shrink-0 h-10 px-3 md:px-6">
+                    <span className="hidden md:inline">Yeni Randevu</span>
+                    <span className="md:hidden"><Plus size={20} /></span>
                 </Button>
             </div>
         </div>
@@ -401,14 +415,14 @@ export const CalendarPage = () => {
                     }}
                 >
                     {/* Top-Left Corner */}
-                    <div className="sticky top-0 left-0 z-40 bg-white border-b border-r border-slate-200"></div>
+                    <div className="sticky top-0 left-0 z-20 bg-white border-b border-r border-slate-200"></div>
                     
                     {/* Day Headers */}
                     {daysToShow.map((day, i) => {
                         const isToday = isSameDay(day, new Date());
                         const isSunday = getDay(day) === 0;
                         return (
-                            <div key={i} className={`sticky top-0 z-40 border-b border-r border-slate-200 flex items-center justify-center bg-white ${isToday ? 'bg-indigo-50/30' : ''} ${isSunday ? 'bg-slate-50' : ''}`}>
+                            <div key={i} className={`sticky top-0 z-20 border-b border-r border-slate-200 flex items-center justify-center bg-white ${isToday ? 'bg-indigo-50/30' : ''} ${isSunday ? 'bg-slate-50' : ''}`}>
                                 <div className="text-center py-2">
                                     <span className={`text-sm font-bold block ${isToday ? 'text-indigo-600' : 'text-slate-900'}`}>
                                         {format(day, 'd MMMM', { locale: tr })}
@@ -422,7 +436,7 @@ export const CalendarPage = () => {
                     })}
 
                     {/* Time Column */}
-                    <div className="relative border-r border-slate-200 bg-white sticky left-0 z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]" style={{ height: timeSlots.length * rowHeight }}>
+                    <div className="relative border-r border-slate-200 bg-white sticky left-0 z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]" style={{ height: timeSlots.length * rowHeight }}>
                         {timeSlots.map(time => {
                             const isHour = time.endsWith(':00');
                             return (

@@ -57,16 +57,16 @@ export const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile Backdrop - Increased Z-Index */}
       {isMobileMenuOpen && (
         <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[45] md:hidden animate-in fade-in"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] md:hidden animate-in fade-in"
             onClick={closeMobileMenu}
         />
       )}
 
       <aside 
-        className={`fixed inset-y-0 left-0 bg-black text-slate-400 flex flex-col transition-all duration-300 ease-in-out z-[50]
+        className={`fixed inset-y-0 left-0 bg-black text-slate-400 flex flex-col transition-all duration-300 ease-in-out z-[100]
           ${isSidebarExpanded ? 'w-64' : 'w-20'}
           ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'} 
         `}
@@ -171,21 +171,40 @@ export const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Logout Modal */}
+      {/* Logout Modal - Increased Z-Index */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200 border border-slate-100">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-0">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[320px] sm:max-w-sm p-6 sm:p-8 animate-in zoom-in-95 duration-200 border border-slate-100 relative z-10 mx-auto">
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-red-50/50">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-5 ring-8 ring-red-50/50">
                 <LogOut size={28} strokeWidth={2.5} />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Çıkış Yapılıyor</h3>
-              <p className="text-slate-500 text-sm mb-8 leading-relaxed px-4">
-                Devam etmek istediğinize emin misiniz?
+              <p className="text-slate-500 text-sm mb-8 leading-relaxed px-2">
+                Hesabınızdan çıkış yapmak üzeresiniz. Devam etmek istediğinize emin misiniz?
               </p>
-              <div className="flex gap-3 w-full">
-                <Button variant="outline" className="flex-1 h-11" onClick={() => setShowLogoutConfirm(false)}>Vazgeç</Button>
-                <Button variant="danger" className="flex-1 h-11" onClick={confirmLogout}>Çıkış Yap</Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Button 
+                    variant="outline" 
+                    className="flex-1 h-12 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-transform" 
+                    onClick={() => setShowLogoutConfirm(false)}
+                >
+                    Vazgeç
+                </Button>
+                <Button 
+                    variant="danger" 
+                    className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 active:scale-95 transition-transform" 
+                    onClick={confirmLogout}
+                >
+                    Çıkış Yap
+                </Button>
               </div>
             </div>
           </div>

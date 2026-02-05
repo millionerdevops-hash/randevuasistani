@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, User, Scissors, AlertCircle, Trash2, Repeat, Hash, CalendarDays } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, User, Scissors, AlertCircle, Trash2, Repeat, Hash, CalendarDays, ChevronDown } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Button, Input, Select, DatePicker, TimePicker } from './ui/LayoutComponents';
 import { Appointment } from '../types';
@@ -151,99 +151,105 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-      {/* 
-         Removed h-[90vh], relying on content but with a max-height to fit smaller screens.
-         Using overflow-hidden on the main card to prevent body scroll.
-      */}
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[95vh]">
+    // Mobile: Full screen, justify-end (bottom sheet feel) or justify-center (modal)
+    // Desktop: Centered modal
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      
+      {/* Container */}
+      <div className="bg-white w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-5xl flex flex-col md:rounded-3xl shadow-2xl overflow-hidden transition-all animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-4 duration-300">
         
-        {/* Header - Compact padding */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white shrink-0">
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 md:px-6 py-4 border-b border-slate-100 bg-white shrink-0 relative z-10">
           <div>
-             <h2 className="text-lg font-bold text-slate-900">
-               {appointment ? "Randevu Düzenle" : "Yeni Randevu Oluştur"}
+             <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">
+               {appointment ? "Randevu Düzenle" : "Yeni Randevu"}
              </h2>
-             <p className="text-xs text-slate-500">Gerekli bilgileri doldurarak randevuyu planlayın.</p>
+             <p className="text-xs text-slate-500 hidden md:block">Gerekli bilgileri doldurarak randevuyu planlayın.</p>
           </div>
           <div className="flex items-center gap-2">
             {appointment && (
               <button onClick={handleDelete} className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Sil">
-                <Trash2 size={18} />
+                <Trash2 size={20} />
               </button>
             )}
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all">
+            <button 
+                onClick={onClose} 
+                className="p-2 bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-all"
+            >
               <X size={20} />
             </button>
           </div>
         </div>
 
-        {/* Main Content - Flex layout to fill space without main scrollbar */}
-        <form id="appointment-form" onSubmit={handleSubmit} className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Scrollable Content Form */}
+        {/* Mobile: Single scrollable column. Desktop: Flex row with separate scrolling if needed or just fit content. */}
+        <form id="appointment-form" onSubmit={handleSubmit} className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-slate-50 md:bg-white relative">
             
-            {/* LEFT COLUMN: Who & What */}
-            {/* Added flex flex-col and overflow-hidden to allow inner scrolling for services if needed */}
-            <div className="w-full md:w-7/12 p-6 flex flex-col border-b md:border-b-0 md:border-r border-slate-100 overflow-hidden bg-white">
+            {/* --- LEFT SIDE: Selection (Customer, Staff, Services) --- */}
+            <div className="w-full md:w-7/12 p-4 md:p-6 flex flex-col gap-5 border-b md:border-b-0 md:border-r border-slate-200 bg-white">
                 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs flex items-center gap-2 border border-red-100 mb-4 shrink-0">
-                    <AlertCircle size={16} className="shrink-0" />
-                    {error}
+                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm flex items-start gap-2 border border-red-100 animate-in slide-in-from-top-2">
+                        <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                        <span>{error}</span>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 shrink-0">
-                    {/* Müşteri Seçimi */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                        <User size={14} className="text-slate-500" /> Müşteri
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Müşteri */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                            <User size={14} className="text-slate-400" /> Müşteri
                         </label>
                         <Select 
-                        value={customerId} 
-                        onChange={(e) => setCustomerId(Number(e.target.value))}
-                        required
-                        className="bg-slate-50 border-slate-200 focus:bg-white h-10 text-sm" // Compact height
+                            value={customerId} 
+                            onChange={(e) => setCustomerId(Number(e.target.value))}
+                            required
+                            className="bg-slate-50 border-slate-200 h-12 text-base font-medium focus:ring-black"
                         >
-                        <option value="">Müşteri Seçin...</option>
-                        {customers.map(c => (
-                            <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
-                        ))}
+                            <option value="">Müşteri Seçin...</option>
+                            {customers.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
                         </Select>
                     </div>
 
-                    {/* Personel Seçimi */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                        <User size={14} className="text-slate-500" /> Personel
+                    {/* Personel */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                            <User size={14} className="text-slate-400" /> Personel
                         </label>
                         <Select 
-                        value={staffId} 
-                        onChange={(e) => setStaffId(Number(e.target.value))}
-                        required
-                        className="bg-slate-50 border-slate-200 focus:bg-white h-10 text-sm" // Compact height
+                            value={staffId} 
+                            onChange={(e) => setStaffId(Number(e.target.value))}
+                            required
+                            className="bg-slate-50 border-slate-200 h-12 text-base font-medium focus:ring-black"
                         >
-                        <option value="">Personel Seçin...</option>
-                        {staff.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
+                            <option value="">Personel Seçin...</option>
+                            {staff.map(s => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
                         </Select>
                     </div>
                 </div>
 
-                {/* Hizmet Seçimi - Fills remaining space */}
+                {/* Hizmetler */}
                 <div className="flex flex-col flex-1 min-h-0">
-                    <div className="flex justify-between items-end mb-2 shrink-0">
-                        <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                            <Scissors size={14} className="text-slate-500" /> Hizmetler
+                    <div className="flex justify-between items-end mb-3 sticky top-0 bg-white z-10 py-1">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                            <Scissors size={14} className="text-slate-400" /> Hizmetler
                         </label>
-                        <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                            {selectedServiceIds.length} seçildi
-                        </span>
+                        {selectedServiceIds.length > 0 && (
+                            <span className="text-[10px] font-bold text-white bg-black px-2 py-1 rounded-full animate-in zoom-in">
+                                {selectedServiceIds.length} Seçildi
+                            </span>
+                        )}
                     </div>
                     
-                    {/* Grid wrapper with overflow-y-auto to scroll ONLY services if list is long */}
-                    <div className="flex-1 overflow-y-auto pr-1">
-                        <div className="grid grid-cols-2 gap-2 pb-2">
+                    {/* Services List - Mobile: List View (grid-cols-1), Desktop: Grid (grid-cols-2) */}
+                    {/* Fixed: Use overflow-visible on mobile so page scrolls, internal scroll on desktop */}
+                    <div className="md:flex-1 md:overflow-y-auto md:pr-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-4">
                             {services.map(s => {
                                 const isSelected = selectedServiceIds.includes(s.id);
                                 return (
@@ -251,18 +257,29 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                                         key={s.id}
                                         type="button"
                                         onClick={() => toggleService(s.id)}
-                                        className={`relative flex items-center p-2.5 rounded-lg border transition-all text-left group ${
+                                        className={`relative flex items-center p-3 rounded-xl border transition-all text-left group w-full ${
                                             isSelected
-                                            ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                            ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200 transform scale-[1.01]'
                                             : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                                         }`}
                                     >
-                                        <div className={`w-1.5 h-6 rounded-full mr-2.5 shrink-0 ${isSelected ? 'bg-white/30' : ''}`} style={{ backgroundColor: isSelected ? undefined : s.color }}></div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s.name}</div>
-                                            <div className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{s.duration} dk</div>
+                                        {/* Color Indicator */}
+                                        <div 
+                                            className={`w-1.5 h-8 rounded-full mr-3 shrink-0 transition-colors ${isSelected ? 'bg-white/40' : ''}`} 
+                                            style={{ backgroundColor: isSelected ? undefined : s.color }}
+                                        ></div>
+                                        
+                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                            <div className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s.name}</div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className={`text-[10px] font-medium ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>{s.duration} dk</span>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{s.category}</span>
+                                            </div>
                                         </div>
-                                        <div className={`text-xs font-bold ml-1 ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s.price}₺</div>
+                                        
+                                        <div className={`text-sm font-bold ml-2 ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                                            {s.price}₺
+                                        </div>
                                     </button>
                                 );
                             })}
@@ -271,120 +288,111 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 </div>
             </div>
 
-            {/* RIGHT COLUMN: When & Details */}
-            <div className="w-full md:w-5/12 p-6 bg-slate-50/50 flex flex-col space-y-4">
+            {/* --- RIGHT SIDE: Time & Notes --- */}
+            <div className="w-full md:w-5/12 p-4 md:p-6 bg-slate-50 flex flex-col gap-5">
                 
                 {/* Tarih ve Saat */}
-                <div className="grid grid-cols-2 gap-3 shrink-0">
-                    <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                        <CalendarIcon size={14} className="text-slate-500" /> Tarih
-                    </label>
-                    <div className="h-10"> {/* Fixed height wrapper for consistency */}
-                        <DatePicker 
-                            value={date}
-                            onChange={setDate}
-                        />
-                    </div>
-                    </div>
-                    <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                        <Clock size={14} className="text-slate-500" /> Saat
-                    </label>
-                    <TimePicker 
-                        value={startTime}
-                        onChange={setStartTime}
-                        className="h-10" // Pass class if supported or style wrapper
-                    />
-                    </div>
-                </div>
-
-                {/* Tekrarlayan Randevu Bölümü */}
-                <div className={`border rounded-xl p-3 transition-all shrink-0 ${isRecurring ? 'bg-white border-slate-900 shadow-sm' : 'bg-transparent border-slate-200'}`}>
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <div className="relative flex items-center">
-                            <input 
-                                type="checkbox"
-                                id="recurring"
-                                checked={isRecurring}
-                                onChange={(e) => setIsRecurring(e.target.checked)}
-                                className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-slate-300 transition-all checked:border-slate-900 checked:bg-slate-900 hover:border-slate-400"
-                            />
-                            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100">
-                                <Repeat size={10} strokeWidth={3} />
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Zamanlama</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-slate-700">Tarih</label>
+                            <div className="h-11">
+                                <DatePicker value={date} onChange={setDate} />
                             </div>
                         </div>
-                        <label htmlFor="recurring" className="text-xs font-bold text-slate-800 cursor-pointer select-none">
-                            Tekrarlayan Randevu
-                        </label>
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-slate-700">Saat</label>
+                            <TimePicker value={startTime} onChange={setStartTime} className="h-11" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tekrarlayan & Notlar */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Detaylar</h3>
+                    
+                    {/* Recurring Toggle */}
+                    <div className="mb-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="relative flex items-center">
+                                <input 
+                                    type="checkbox"
+                                    id="recurring"
+                                    checked={isRecurring}
+                                    onChange={(e) => setIsRecurring(e.target.checked)}
+                                    className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-300 transition-all checked:border-black checked:bg-black hover:border-slate-400"
+                                />
+                                <Repeat size={12} strokeWidth={3} className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" />
+                            </div>
+                            <label htmlFor="recurring" className="text-sm font-semibold text-slate-800 cursor-pointer select-none">
+                                Tekrarlayan Randevu
+                            </label>
+                        </div>
+
+                        {isRecurring && (
+                            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl animate-in fade-in slide-in-from-top-1 border border-slate-100">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Sıklık</label>
+                                    <Select 
+                                        value={recurrenceFreq}
+                                        onChange={(e) => setRecurrenceFreq(e.target.value)}
+                                        className="h-9 text-xs"
+                                    >
+                                        <option value="daily">Her Gün</option>
+                                        <option value="weekly">Her Hafta</option>
+                                        <option value="monthly">Her Ay</option>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Tekrar</label>
+                                    <Input 
+                                        type="number"
+                                        min="1"
+                                        max="52"
+                                        value={recurrenceCount}
+                                        onChange={(e) => setRecurrenceCount(e.target.value)}
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {isRecurring && (
-                        <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1">
-                             <div className="space-y-0.5">
-                                <label className="text-[10px] font-semibold text-slate-500 flex items-center gap-1">
-                                    <CalendarDays size={10} /> Sıklık
-                                </label>
-                                <Select 
-                                    value={recurrenceFreq}
-                                    onChange={(e) => setRecurrenceFreq(e.target.value)}
-                                    className="h-8 text-xs py-0"
-                                >
-                                    <option value="daily">Her Gün</option>
-                                    <option value="weekly">Her Hafta</option>
-                                    <option value="monthly">Her Ay</option>
-                                </Select>
-                             </div>
-                             <div className="space-y-0.5">
-                                <label className="text-[10px] font-semibold text-slate-500 flex items-center gap-1">
-                                    <Hash size={10} /> Tekrar Sayısı
-                                </label>
-                                <Input 
-                                    type="number"
-                                    min="1"
-                                    max="52"
-                                    value={recurrenceCount}
-                                    onChange={(e) => setRecurrenceCount(e.target.value)}
-                                    className="h-8 text-xs py-0"
-                                />
-                             </div>
-                        </div>
-                    )}
+                    <div className="space-y-1 flex-1 flex flex-col min-h-[100px]">
+                        <label className="text-xs font-semibold text-slate-700">Müşteri Notu</label>
+                        <textarea
+                            className="flex-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none leading-relaxed"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Müşteri talepleri, özel istekler..."
+                        />
+                    </div>
                 </div>
-
-                {/* Notlar - Fills remaining vertical space */}
-                <div className="space-y-1 flex-1 flex flex-col min-h-0">
-                    <label className="text-xs font-semibold text-slate-900">Notlar</label>
-                    <textarea
-                    className="flex-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Müşteri talepleri veya özel notlar..."
-                    />
-                </div>
+                
+                {/* Spacer for bottom safe area on mobile scroll */}
+                <div className="h-20 md:hidden"></div>
             </div>
         </form>
 
-        {/* Footer / Summary - Compact */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center gap-6">
-                <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Bitiş</p>
-                    <p className="font-mono font-bold text-base text-slate-700">{endTime || "--:--"}</p>
-                </div>
-                <div className="h-8 w-px bg-slate-200"></div>
-                <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Toplam</p>
-                    <p className="font-bold text-xl text-slate-900">{totalPrice} ₺</p>
+        {/* Footer / Summary - Sticky Bottom */}
+        <div className="px-6 py-4 border-t border-slate-200 bg-white shrink-0 flex items-center justify-between gap-4 z-20 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] pb-safe">
+            <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Toplam Tutar</span>
+                <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-slate-900">{totalPrice} ₺</span>
+                    <span className="text-xs text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                        {endTime ? `Bitiş: ${endTime}` : '--:--'}
+                    </span>
                 </div>
             </div>
 
             <Button 
                 onClick={handleSubmit}
                 variant="black"
-                className="w-full sm:w-auto px-6 h-10 text-sm shadow-lg shadow-slate-300"
+                className="px-8 h-12 text-sm font-semibold rounded-full shadow-lg shadow-slate-300 active:scale-95 transition-transform"
             >
-                {appointment ? "Kaydet" : "Randevuyu Kaydet"}
+                {appointment ? "Güncelle" : "Kaydet"}
             </Button>
         </div>
 

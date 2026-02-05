@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Edit2, Save, Phone, Mail, User, Check } from 'lucide-react';
+import { X, Calendar, Edit2, Save, Phone, Mail, User, Check, UserPlus } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Button, Input, PhoneInput, formatPhoneNumber } from './ui/LayoutComponents';
 import { Customer } from '../types';
@@ -13,23 +13,104 @@ interface CustomerModalProps {
 }
 
 export const CustomerModal: React.FC<CustomerModalProps> = ({ customer, isOpen, onClose }) => {
-  const { appointments, updateCustomer, services, staff } = useStore();
+  const { appointments, updateCustomer, addCustomer, services, staff } = useStore();
   
-  // Profile Editing State
+  // Profile Editing State (For Existing Customer)
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Customer>>({});
+
+  // Creation State (For New Customer)
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newEmail, setNewEmail] = useState("");
 
   // Notes State
   const [notes, setNotes] = useState("");
   const [isNoteSaved, setIsNoteSaved] = useState(false);
 
   useEffect(() => {
-    if (customer) {
-      setNotes(customer.notes || "");
+    if (isOpen) {
+        if (customer) {
+            // View Mode Init
+            setNotes(customer.notes || "");
+            setIsEditing(false);
+            setEditForm({});
+        } else {
+            // Create Mode Init
+            setNewName("");
+            setNewPhone("");
+            setNewEmail("");
+        }
     }
   }, [customer, isOpen]);
 
-  if (!isOpen || !customer) return null;
+  if (!isOpen) return null;
+
+  // --- MODE 1: CREATE NEW CUSTOMER ---
+  if (!customer) {
+    const handleCreate = (e: React.FormEvent) => {
+        e.preventDefault();
+        addCustomer({
+            name: newName,
+            phone: newPhone,
+            email: newEmail
+        });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="flex justify-between items-center p-6 border-b border-slate-100">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <UserPlus size={24} className="text-slate-400" />
+                        Yeni Müşteri Ekle
+                    </h2>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+                        <X size={24} />
+                    </button>
+                </div>
+                
+                <form onSubmit={handleCreate} className="p-6 space-y-5">
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">Ad Soyad</label>
+                        <Input 
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            placeholder="Örn: Ayşe Yılmaz"
+                            required
+                            autoFocus
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">Telefon</label>
+                        <PhoneInput 
+                            value={newPhone}
+                            onChange={(val) => setNewPhone(val)}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">E-posta</label>
+                        <Input 
+                            type="email"
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                            placeholder="ornek@email.com"
+                        />
+                    </div>
+
+                    <div className="pt-2 flex gap-3">
+                        <Button type="button" variant="outline" className="flex-1" onClick={onClose}>İptal</Button>
+                        <Button type="submit" variant="black" className="flex-1">Kaydet</Button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+  }
+
+  // --- MODE 2: VIEW/EDIT EXISTING CUSTOMER ---
 
   const customerHistory = appointments
     .filter(a => a.customerId === customer.id)
@@ -53,7 +134,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ customer, isOpen, 
     // Show success message for 1 second then close
     setTimeout(() => {
       setIsNoteSaved(false);
-      onClose();
+    //   onClose(); // Optional: Close modal after note save? Let's keep it open.
     }, 1000);
   };
 
@@ -65,7 +146,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ customer, isOpen, 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
         
         {/* Left Sidebar: Profile Info */}
-        <div className="md:w-1/3 bg-slate-50 p-8 border-r border-slate-100 flex flex-col items-center text-center">
+        <div className="md:w-1/3 bg-slate-50 p-8 border-r border-slate-100 flex flex-col items-center text-center overflow-y-auto">
           <img 
             src={`https://i.pravatar.cc/300?img=${customer.id}`} 
             alt={customer.name} 
