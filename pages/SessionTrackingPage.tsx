@@ -4,10 +4,12 @@ import { Card, Button, Input } from '../components/ui/LayoutComponents';
 import { Search, ChevronRight, Layers, Calendar, Check, X, Plus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { SessionPackageModal } from '../components/SessionPackageModal';
 
 export const SessionTrackingPage = () => {
   const { sessionPackages, customers, deleteSessionPackage } = useStore();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getCustomer = (id: number) => customers.find(c => c.id === id);
 
@@ -29,8 +31,7 @@ export const SessionTrackingPage = () => {
   };
 
   const handleNewPackage = () => {
-      // Mock Action as modal logic wasn't fully implemented in base code
-      console.log("Open new package modal");
+      setIsModalOpen(true);
   };
 
   return (
@@ -219,6 +220,11 @@ export const SessionTrackingPage = () => {
       >
         <Plus size={28} />
       </button>
+
+      <SessionPackageModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
 
     </div>
   );
