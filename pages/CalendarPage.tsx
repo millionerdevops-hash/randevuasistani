@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
-import { Button } from '../components/ui/LayoutComponents';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown, Clock } from 'lucide-react';
+import { Button, Select } from '../components/ui/LayoutComponents';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown, Clock, Search, X, CheckCircle2 } from 'lucide-react';
 import { 
   format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, 
   isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, 
-  subMonths, addMonths, subDays, isSameMonth, getDay
+  subMonths, addMonths, subDays, isSameMonth, getDay, parseISO, addMinutes
 } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { AppointmentModal } from '../components/AppointmentModal';
@@ -17,6 +17,11 @@ export const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewMode>('week');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Availability Finder State
+  const [isFinderOpen, setIsFinderOpen] = useState(false);
+  const [finderStaffId, setFinderStaffId] = useState<number | 'all'>('all');
+  const [finderDuration, setFinderDuration] = useState('60');
   
   // Selection States
   const [selectedDateForModal, setSelectedDateForModal] = useState<string | undefined>(undefined);
@@ -117,6 +122,38 @@ export const CalendarPage = () => {
     setSelectedDateForModal(undefined);
     setSelectedAppointmentForModal(apt);
     setIsModalOpen(true);
+  };
+
+  // --- Availability Logic (Mock) ---
+  // In a real app, this would query the backend. Here we simulate finding empty slots.
+  const findAvailableSlots = () => {
+    const suggestions = [];
+    const checkDays = [currentDate, addDays(currentDate, 1), addDays(currentDate, 2)]; // Check next 3 days
+    
+    // Simulate finding 3 slots
+    for (const day of checkDays) {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const dayName = format(day, 'EEEE', { locale: tr });
+        
+        // Mock logic: Just suggesting standard times if no conflict
+        // Real logic requires complex collision detection with 'appointments' array
+        suggestions.push({ date: dayStr, dayName, time: '09:00', staffId: finderStaffId === 'all' ? staff[0].id : finderStaffId });
+        suggestions.push({ date: dayStr, dayName, time: '13:30', staffId: finderStaffId === 'all' ? staff[1]?.id || staff[0].id : finderStaffId });
+        suggestions.push({ date: dayStr, dayName, time: '16:00', staffId: finderStaffId === 'all' ? staff[0].id : finderStaffId });
+    }
+    // Limit to 4 suggestions
+    return suggestions.slice(0, 4);
+  };
+
+  const suggestedSlots = isFinderOpen ? findAvailableSlots() : [];
+
+  const handleSlotSelect = (slot: any) => {
+      setSelectedDateForModal(slot.date);
+      // We could also pass the time to the modal if we refactor modal to accept initialTime
+      // For now we just open the date
+      setSelectedStaffId(slot.staffId); // Switch view to that staff
+      setIsFinderOpen(false);
+      setIsModalOpen(true);
   };
 
   // --- Drag and Drop Logic ---
@@ -244,7 +281,7 @@ export const CalendarPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 animate-in fade-in">
+    <div className="flex flex-col h-full space-y-4 animate-in fade-in relative">
       
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -258,7 +295,61 @@ export const CalendarPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
+        {/* Availability Finder Overlay Modal (Simple Implementation) */}
+        {isFinderOpen && (
+            <div className="absolute inset-x-0 top-0 z-[60] bg-white border-b border-slate-200 p-4 shadow-lg animate-in slide-in-from-top-10">
+                <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
+                    <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">İşlem Süresi</label>
+                            <Select value={finderDuration} onChange={(e) => setFinderDuration(e.target.value)} className="h-9 text-sm">
+                                <option value="30">30 Dakika</option>
+                                <option value="60">1 Saat</option>
+                                <option value="90">1.5 Saat</option>
+                                <option value="120">2 Saat</option>
+                            </Select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Personel</label>
+                            <Select value={finderStaffId} onChange={(e) => setFinderStaffId(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="h-9 text-sm">
+                                <option value="all">Farketmez</option>
+                                {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </Select>
+                        </div>
+                    </div>
+                    
+                    <button onClick={() => setIsFinderOpen(false)} className="absolute top-2 right-2 text-slate-400 hover:text-black">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div className="mt-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">Önerilen Saatler (Örnek)</h4>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                        {suggestedSlots.map((slot, i) => {
+                            const stf = staff.find(s => s.id === slot.staffId);
+                            return (
+                                <button 
+                                    key={i} 
+                                    onClick={() => handleSlotSelect(slot)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all bg-white min-w-[140px] group"
+                                >
+                                    <div className="bg-indigo-100 text-indigo-600 p-1.5 rounded-md">
+                                        <Clock size={14} />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="text-xs font-bold text-slate-800">{slot.time}</div>
+                                        <div className="text-[10px] text-slate-500 group-hover:text-indigo-600">{slot.dayName}, {stf?.name.split(' ')[0]}</div>
+                                    </div>
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* Header Toolbar */}
         <div className="flex flex-col lg:flex-row items-center justify-between p-4 border-b border-slate-200 gap-4 shrink-0 z-50 bg-white relative">
             
@@ -311,6 +402,14 @@ export const CalendarPage = () => {
 
             {/* Right Side: View & Action */}
             <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
+                <Button 
+                    variant="outline" 
+                    onClick={() => setIsFinderOpen(!isFinderOpen)}
+                    className={`hidden sm:flex px-4 ${isFinderOpen ? 'bg-slate-100 border-slate-300' : ''}`}
+                >
+                    <Search size={16} className="mr-2" /> Müsaitlik Bul
+                </Button>
+
                 <div className="relative min-w-[120px]">
                     <div className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                         <span>

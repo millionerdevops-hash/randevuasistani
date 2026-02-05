@@ -179,6 +179,9 @@ interface AppState {
   // UI State
   isSidebarExpanded: boolean;
   toggleSidebar: () => void;
+  isMobileMenuOpen: boolean; // Yeni
+  toggleMobileMenu: () => void; // Yeni
+  closeMobileMenu: () => void; // Yeni
 
   staff: Staff[];
   services: Service[];
@@ -227,6 +230,9 @@ export const useStore = create<AppState>()(
       // UI Defaults
       isSidebarExpanded: false,
       toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
+      isMobileMenuOpen: false,
+      toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
+      closeMobileMenu: () => set({ isMobileMenuOpen: false }),
 
       staff: initialStaff,
       services: initialServices,

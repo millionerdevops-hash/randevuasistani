@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, Button, Input } from '../components/ui/LayoutComponents';
-import { Search, ChevronRight, Plus, Check, Edit2, Trash2, Bell, Clock, Calendar, ChevronLeft } from 'lucide-react';
+import { Search, ChevronRight, Plus, Check, Edit2, Trash2, Bell, Clock, Calendar, ChevronLeft, User } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { NoteModal } from '../components/NoteModal';
 import { Note } from '../types';
@@ -11,11 +11,8 @@ export const AgendaPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'read' | 'unread'>('all');
   
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-
-  // Pagination (Simple)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -24,9 +21,7 @@ export const AgendaPage = () => {
         note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
         note.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
         note.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesStatus = statusFilter === 'all' || note.status === statusFilter;
-
     return matchesSearch && matchesStatus;
   }).sort((a, b) => new Date(b.date + 'T' + b.time).getTime() - new Date(a.date + 'T' + a.time).getTime());
 
@@ -34,9 +29,7 @@ export const AgendaPage = () => {
   const displayedNotes = filteredNotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleDelete = (id: number) => {
-    if(window.confirm("Bu notu silmek istediğinize emin misiniz?")) {
-        deleteNote(id);
-    }
+    if(window.confirm("Bu notu silmek istediğinize emin misiniz?")) deleteNote(id);
   };
 
   const handleEdit = (note: Note) => {
@@ -48,14 +41,8 @@ export const AgendaPage = () => {
     updateNote(note.id, { status: note.status === 'read' ? 'unread' : 'read' });
   };
 
-  const openNewNoteModal = () => {
-      setSelectedNote(null);
-      setIsModalOpen(true);
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Ajanda / Notlar</h1>
@@ -65,63 +52,27 @@ export const AgendaPage = () => {
               <span className="text-slate-900 font-medium">Notlar</span>
            </div>
         </div>
-        <Button variant="black" onClick={openNewNoteModal}>
+        <Button variant="black" onClick={() => { setSelectedNote(null); setIsModalOpen(true); }} className="w-full sm:w-auto">
            <Plus size={18} className="mr-2" /> Yeni Not Ekle
         </Button>
       </div>
 
-      {/* Filter / Search Bar */}
       <Card className="p-4 bg-slate-50 border border-slate-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              
-              {/* Filter Tabs */}
               <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 w-full md:w-auto">
-                 <button 
-                    onClick={() => setStatusFilter('all')}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
-                 >
-                    Tümü
-                 </button>
-                 <button 
-                    onClick={() => setStatusFilter('read')}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'read' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
-                 >
-                    Okundu
-                 </button>
-                 <button 
-                    onClick={() => setStatusFilter('unread')}
-                    className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'unread' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
-                 >
-                    Okunmadı
-                 </button>
+                 <button onClick={() => setStatusFilter('all')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>Tümü</button>
+                 <button onClick={() => setStatusFilter('read')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'read' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>Okundu</button>
+                 <button onClick={() => setStatusFilter('unread')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-semibold transition-all ${statusFilter === 'unread' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>Okunmadı</button>
               </div>
-
-              {/* Search & Page Count */}
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                 <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
-                    <span>Sayfada</span>
-                    <select className="border border-slate-200 rounded p-1 bg-white font-semibold focus:outline-none">
-                        <option>10</option>
-                        <option>20</option>
-                    </select> 
-                    <span>kayıt göster</span>
-                 </div>
-
-                 <div className="relative w-full md:w-64">
-                    <Input 
-                        placeholder="Ara..." 
-                        className="pl-10 bg-white border-slate-200"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-                 </div>
-              </div>
+              <div className="relative w-full md:w-64">
+                <Input placeholder="Ara..." className="pl-10 bg-white border-slate-200" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
+             </div>
           </div>
       </Card>
 
-      {/* Table */}
-      <Card className="overflow-hidden border border-slate-200 shadow-sm p-0">
+      {/* Desktop Table */}
+      <Card className="hidden md:block overflow-hidden border border-slate-200 shadow-sm p-0">
          <div className="overflow-x-auto">
              <table className="w-full text-sm text-left">
                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
@@ -141,116 +92,71 @@ export const AgendaPage = () => {
                      {displayedNotes.length > 0 ? (
                          displayedNotes.map((note) => (
                              <tr key={note.id} className="hover:bg-slate-50 transition-colors group">
-                                 <td className="px-6 py-4 font-bold text-slate-900">
-                                     {note.title}
-                                 </td>
-                                 <td className="px-6 py-4 text-slate-700 font-medium">
-                                     {note.subject}
-                                 </td>
-                                 <td className="px-6 py-4 text-slate-600 truncate max-w-xs" title={note.content}>
-                                     {note.content}
-                                 </td>
+                                 <td className="px-6 py-4 font-bold text-slate-900">{note.title}</td>
+                                 <td className="px-6 py-4 text-slate-700 font-medium">{note.subject}</td>
+                                 <td className="px-6 py-4 text-slate-600 truncate max-w-xs">{note.content}</td>
+                                 <td className="px-6 py-4 text-center">{note.hasReminder && <Check size={16} className="text-green-600 mx-auto"/>}</td>
+                                 <td className="px-6 py-4 text-slate-600">{format(parseISO(note.date), 'dd.MM.yyyy')}</td>
+                                 <td className="px-6 py-4 text-slate-600 font-mono">{note.time}</td>
                                  <td className="px-6 py-4 text-center">
-                                     {note.hasReminder && (
-                                         <div className="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full">
-                                            <Check size={14} strokeWidth={3} />
-                                         </div>
-                                     )}
+                                     <button onClick={() => toggleStatus(note)} className={`px-3 py-1 rounded-full text-xs font-bold ${note.status === 'read' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}`}>{note.status === 'read' ? 'Okundu' : 'Okunmadı'}</button>
                                  </td>
-                                 <td className="px-6 py-4 text-slate-600">
-                                     {format(parseISO(note.date), 'dd.MM.yyyy')}
-                                 </td>
-                                 <td className="px-6 py-4 text-slate-600 font-mono">
-                                     {note.time}
-                                 </td>
-                                 <td className="px-6 py-4 text-center">
-                                     <button 
-                                        onClick={() => toggleStatus(note)}
-                                        className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                                            note.status === 'read' 
-                                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                                        }`}
-                                     >
-                                        {note.status === 'read' ? 'Okundu' : 'Okunmadı'}
-                                     </button>
-                                 </td>
-                                 <td className="px-6 py-4 text-slate-600">
-                                     {note.creator}
-                                 </td>
+                                 <td className="px-6 py-4 text-slate-600">{note.creator}</td>
                                  <td className="px-6 py-4 text-right">
                                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                         <button onClick={() => handleEdit(note)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded text-slate-600" title="Düzenle">
-                                             <Edit2 size={14} />
-                                         </button>
-                                         <button onClick={() => handleDelete(note.id)} className="p-2 bg-red-50 hover:bg-red-100 rounded text-red-600" title="Sil">
-                                             <Trash2 size={14} />
-                                         </button>
+                                         <button onClick={() => handleEdit(note)} className="p-2 bg-slate-100 rounded text-slate-600"><Edit2 size={14} /></button>
+                                         <button onClick={() => handleDelete(note.id)} className="p-2 bg-red-50 rounded text-red-600"><Trash2 size={14} /></button>
                                      </div>
                                  </td>
                              </tr>
                          ))
                      ) : (
-                         <tr>
-                             <td colSpan={9} className="px-6 py-12 text-center text-slate-400">
-                                 <div className="flex flex-col items-center">
-                                     <Bell size={32} className="mb-2 opacity-50" />
-                                     <p>Kayıtlı not bulunamadı.</p>
-                                 </div>
-                             </td>
-                         </tr>
+                         <tr><td colSpan={9} className="px-6 py-12 text-center text-slate-400">Not bulunamadı.</td></tr>
                      )}
                  </tbody>
              </table>
          </div>
-
-         {/* Footer / Pagination */}
-         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-             <div className="text-sm text-slate-500">
-                 {filteredNotes.length} kayıttan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredNotes.length)} arası gösteriliyor
-             </div>
-             
-             <div className="flex items-center gap-1">
-                <Button 
-                    variant="outline" 
-                    className="h-8 px-3 text-xs" 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                >
-                    Önceki
-                </Button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
-                            currentPage === page 
-                                ? 'bg-black text-white' 
-                                : 'text-slate-600 hover:bg-slate-200'
-                        }`}
-                    >
-                        {page}
-                    </button>
-                ))}
-
-                <Button 
-                    variant="outline" 
-                    className="h-8 px-3 text-xs" 
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                >
-                    Sonraki
-                </Button>
-             </div>
-         </div>
       </Card>
 
-      <NoteModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        note={selectedNote}
-      />
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+          {displayedNotes.map(note => (
+              <div key={note.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative">
+                  <div className="flex justify-between items-start">
+                      <div>
+                          <h3 className="font-bold text-slate-900">{note.title}</h3>
+                          <p className="text-xs text-slate-500 font-medium">{note.subject}</p>
+                      </div>
+                      <button onClick={() => toggleStatus(note)} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${note.status === 'read' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}`}>
+                          {note.status === 'read' ? 'Okundu' : 'Okunmadı'}
+                      </button>
+                  </div>
+                  
+                  <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">{note.content}</p>
+                  
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                      <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1"><Calendar size={12}/> {format(parseISO(note.date), 'dd.MM')}</span>
+                          <span className="flex items-center gap-1"><Clock size={12}/> {note.time}</span>
+                          <span className="flex items-center gap-1"><User size={12}/> {note.creator}</span>
+                      </div>
+                      <div className="flex gap-2">
+                          <button onClick={() => handleEdit(note)} className="p-1.5 bg-slate-100 rounded text-slate-600"><Edit2 size={14} /></button>
+                          <button onClick={() => handleDelete(note.id)} className="p-1.5 bg-red-50 rounded text-red-600"><Trash2 size={14} /></button>
+                      </div>
+                  </div>
+              </div>
+          ))}
+          {displayedNotes.length === 0 && <div className="text-center py-10 text-slate-400">Not bulunamadı.</div>}
+      </div>
+
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex justify-center gap-4">
+            <Button variant="outline" className="h-8 px-3 text-xs" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>Önceki</Button>
+            <span className="text-sm text-slate-600 flex items-center">{currentPage} / {totalPages || 1}</span>
+            <Button variant="outline" className="h-8 px-3 text-xs" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Sonraki</Button>
+      </div>
+
+      <NoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} note={selectedNote} />
     </div>
   );
 };

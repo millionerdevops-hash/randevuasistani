@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { 
-  LayoutDashboard, // Özet için
-  ListOrdered, // Adisyonlar için
+  LayoutDashboard, 
+  ListOrdered, 
   CalendarDays, 
   Receipt, 
   Package, 
@@ -14,14 +14,16 @@ import {
   ChevronRight,
   ChevronLeft,
   CalendarCheck2,
-  Layers, // Seans Takibi için
-  NotebookPen // Ajanda için
+  Layers, 
+  NotebookPen, 
+  Menu, 
+  X 
 } from 'lucide-react';
 import { Button } from './ui/LayoutComponents';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
-  const { logout, isSidebarExpanded, toggleSidebar } = useStore();
+  const { logout, isSidebarExpanded, toggleSidebar, isMobileMenuOpen, closeMobileMenu } = useStore();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const menuItems = [
@@ -29,7 +31,7 @@ export const Sidebar = () => {
     { icon: CalendarDays, label: 'Randevu Takvimi', path: '/calendar' },
     { icon: CalendarCheck2, label: 'Randevular', path: '/appointments' },
     { icon: Layers, label: 'Seans Takibi', path: '/sessions' }, 
-    { icon: NotebookPen, label: 'Ajanda', path: '/agenda' }, // Yeni Öğe
+    { icon: NotebookPen, label: 'Ajanda', path: '/agenda' }, 
     { icon: ListOrdered, label: 'Adisyonlar', path: '/transactions' },
     { icon: Receipt, label: 'Müşteriler', path: '/customers' }, 
     { icon: Package, label: 'Hizmetler', path: '/services' },
@@ -46,48 +48,72 @@ export const Sidebar = () => {
     setShowLogoutConfirm(false);
   };
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    closeMobileMenu(); 
+  };
+
+  const isExpanded = isSidebarExpanded || isMobileMenuOpen;
+
   return (
     <>
+      {/* Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[45] md:hidden animate-in fade-in"
+            onClick={closeMobileMenu}
+        />
+      )}
+
       <aside 
-        className={`fixed left-0 top-0 h-full bg-black text-slate-400 flex flex-col transition-all duration-300 ease-in-out z-50 hidden md:flex ${
-          isSidebarExpanded ? 'w-64 px-4' : 'w-20 items-center'
-        }`}
+        className={`fixed inset-y-0 left-0 bg-black text-slate-400 flex flex-col transition-all duration-300 ease-in-out z-[50]
+          ${isSidebarExpanded ? 'w-64' : 'w-20'}
+          ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'} 
+        `}
       >
         {/* Logo Area */}
-        <div className={`mt-6 mb-10 flex items-center ${isSidebarExpanded ? 'justify-start px-2' : 'justify-center'}`}>
-          <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-black font-extrabold text-xl shrink-0 transition-transform duration-300">
-            r.
-          </div>
-          <span 
-            className={`ml-3 font-bold text-white text-lg tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300 ${
-              isSidebarExpanded ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0'
-            }`}
-          >
-            randevumvar
-          </span>
+        <div className={`h-20 flex items-center shrink-0 transition-all duration-300 ${isExpanded ? 'px-6 justify-between' : 'justify-center'}`}>
+            <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-black font-extrabold text-xl shrink-0">
+                    r.
+                </div>
+                <span 
+                    className={`font-bold text-white text-lg tracking-tight whitespace-nowrap transition-opacity duration-300 ${
+                    isExpanded ? 'opacity-100' : 'opacity-0 hidden'
+                    }`}
+                >
+                    randevumvar
+                </span>
+            </div>
+            
+            {/* Mobile Close Button */}
+            <button onClick={closeMobileMenu} className="md:hidden text-slate-400 hover:text-white transition-colors">
+                <X size={24} />
+            </button>
         </div>
 
         {/* Navigation */}
-        <nav className={`flex-1 flex flex-col gap-4 w-full ${!isSidebarExpanded && 'px-4'}`}>
+        <nav className={`flex-1 flex flex-col gap-2 w-full overflow-y-auto no-scrollbar ${!isExpanded ? 'px-2 items-center' : 'px-4'}`}>
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={closeMobileMenu}
               className={({ isActive }) =>
-                `flex items-center gap-3 h-12 rounded-xl transition-all duration-200 group overflow-hidden ${
-                  isSidebarExpanded ? 'px-3 w-full' : 'justify-center w-12'
+                `flex items-center gap-3 h-11 rounded-xl transition-all duration-200 group overflow-hidden shrink-0 ${
+                  isExpanded ? 'px-3 w-full' : 'justify-center w-11'
                 } ${
                   isActive 
                     ? 'bg-white text-black shadow-lg shadow-white/10' 
                     : 'text-slate-500 hover:text-white hover:bg-white/10'
                 }`
               }
-              title={!isSidebarExpanded ? item.label : ''}
+              title={!isExpanded ? item.label : ''}
             >
-              <item.icon size={22} strokeWidth={2} className="shrink-0" />
+              <item.icon size={20} strokeWidth={2} className="shrink-0" />
               <span 
                 className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                  isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
+                  isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
                 }`}
               >
                 {item.label}
@@ -96,20 +122,20 @@ export const Sidebar = () => {
           ))}
         </nav>
 
-        {/* Settings / Footer */}
-        <div className={`mt-auto mb-6 flex flex-col gap-2 w-full ${!isSidebarExpanded && 'px-4 items-center'}`}>
+        {/* Footer Actions */}
+        <div className={`mt-auto mb-6 flex flex-col gap-2 w-full ${!isExpanded ? 'items-center px-2' : 'px-4'}`}>
           
           <button 
-            onClick={() => navigate('/settings')}
-            className={`flex items-center gap-3 h-12 rounded-xl text-slate-500 hover:text-white hover:bg-white/10 transition-colors overflow-hidden ${
-                isSidebarExpanded ? 'px-3 w-full' : 'justify-center w-12'
+            onClick={() => handleNavigation('/settings')}
+            className={`flex items-center gap-3 h-11 rounded-xl text-slate-500 hover:text-white hover:bg-white/10 transition-colors overflow-hidden shrink-0 ${
+                isExpanded ? 'px-3 w-full' : 'justify-center w-11'
             }`}
             title="Ayarlar"
           >
-            <Settings size={22} className="shrink-0" />
+            <Settings size={20} className="shrink-0" />
             <span 
                 className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                  isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
+                  isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
                 }`}
             >
                 Ayarlar
@@ -118,23 +144,23 @@ export const Sidebar = () => {
 
           <button 
             onClick={handleLogoutClick}
-            className={`flex items-center gap-3 h-12 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors overflow-hidden ${
-                isSidebarExpanded ? 'px-3 w-full' : 'justify-center w-12'
+            className={`flex items-center gap-3 h-11 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors overflow-hidden shrink-0 ${
+                isExpanded ? 'px-3 w-full' : 'justify-center w-11'
             }`}
             title="Çıkış Yap"
           >
-            <LogOut size={22} className="shrink-0" />
+            <LogOut size={20} className="shrink-0" />
             <span 
                 className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                  isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
+                  isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute pointer-events-none'
                 }`}
             >
                 Çıkış Yap
             </span>
           </button>
 
-          {/* Expand/Collapse Toggle */}
-          <div className={`pt-4 mt-2 border-t border-white/10 w-full flex ${isSidebarExpanded ? 'justify-end' : 'justify-center'}`}>
+          {/* Desktop Toggle */}
+          <div className={`hidden md:flex pt-4 mt-2 border-t border-white/10 w-full ${isSidebarExpanded ? 'justify-end' : 'justify-center'}`}>
             <button 
                 onClick={toggleSidebar}
                 className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-white hover:bg-white/10 transition-all"
@@ -145,7 +171,7 @@ export const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200 border border-slate-100">
@@ -153,27 +179,13 @@ export const Sidebar = () => {
               <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-red-50/50">
                 <LogOut size={28} strokeWidth={2.5} />
               </div>
-              
               <h3 className="text-xl font-bold text-slate-900 mb-2">Çıkış Yapılıyor</h3>
               <p className="text-slate-500 text-sm mb-8 leading-relaxed px-4">
-                Hesabınızdan çıkış yapmak üzeresiniz. Devam etmek istediğinize emin misiniz?
+                Devam etmek istediğinize emin misiniz?
               </p>
-              
               <div className="flex gap-3 w-full">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 h-11 border-slate-200 hover:bg-slate-50 text-slate-700" 
-                  onClick={() => setShowLogoutConfirm(false)}
-                >
-                  Vazgeç
-                </Button>
-                <Button 
-                  variant="danger" 
-                  className="flex-1 h-11 bg-red-600 hover:bg-red-700 shadow-red-200 shadow-lg" 
-                  onClick={confirmLogout}
-                >
-                  Çıkış Yap
-                </Button>
+                <Button variant="outline" className="flex-1 h-11" onClick={() => setShowLogoutConfirm(false)}>Vazgeç</Button>
+                <Button variant="danger" className="flex-1 h-11" onClick={confirmLogout}>Çıkış Yap</Button>
               </div>
             </div>
           </div>
@@ -184,11 +196,21 @@ export const Sidebar = () => {
 };
 
 export const MobileHeader = ({ title }: { title: string }) => {
+  const { toggleMobileMenu } = useStore();
+  
   return (
-    <div className="md:hidden bg-black text-white p-4 flex items-center justify-between sticky top-0 z-40">
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center font-bold text-black">r.</div>
-        <span className="font-bold text-lg">{title}</span>
+    <div className="md:hidden bg-black text-white px-4 h-16 flex items-center justify-between sticky top-0 z-40 shadow-md">
+      <div className="flex items-center gap-3">
+        <button 
+            onClick={toggleMobileMenu}
+            className="p-2 -ml-2 text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+        >
+            <Menu size={24} />
+        </button>
+        <div className="flex items-center gap-3">
+            <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center font-bold text-black text-sm">r.</div>
+            <span className="font-bold text-lg tracking-tight">{title}</span>
+        </div>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, Button, Input, Select, DatePicker, formatPhoneNumber } from '../components/ui/LayoutComponents';
-import { Search, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Filter, Plus, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
+import { Search, ChevronRight, Filter, Plus, Edit2, Trash2, Clock, Calendar, User, Scissors } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { AppointmentModal } from '../components/AppointmentModal';
@@ -10,21 +10,17 @@ import { Appointment } from '../types';
 export const AppointmentsPage = () => {
   const { appointments, customers, services, staff, deleteAppointment } = useStore();
   
-  // States for Filtering
+  // States
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [staffFilter, setStaffFilter] = useState("all");
-
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  // Helper Functions for Data Lookup
+  // Helpers
   const getCustomer = (id: number) => customers.find(c => c.id === id);
   const getStaff = (id: number) => staff.find(s => s.id === id);
   const getServices = (ids: number[]) => ids.map(id => services.find(s => s.id === id)?.name).join(', ');
@@ -44,7 +40,6 @@ export const AppointmentsPage = () => {
 
     return matchesSearch && matchesStatus && matchesStaff && matchesDate;
   }).sort((a, b) => {
-      // Sort by date (desc) then time (desc)
       const dateA = new Date(`${a.date}T${a.startTime}`);
       const dateB = new Date(`${b.date}T${b.startTime}`);
       return dateB.getTime() - dateA.getTime();
@@ -80,7 +75,7 @@ export const AppointmentsPage = () => {
       };
 
       return (
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${styles[status as keyof typeof styles] || 'bg-slate-200'}`}>
+          <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${styles[status as keyof typeof styles] || 'bg-slate-200'}`}>
               {labels[status as keyof typeof labels]}
           </span>
       );
@@ -88,6 +83,7 @@ export const AppointmentsPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-slate-900">Randevular</h1>
@@ -97,8 +93,7 @@ export const AppointmentsPage = () => {
               <span className="text-slate-900 font-medium">Randevular</span>
            </div>
         </div>
-        {/* Updated Button to Black Variant */}
-        <Button variant="black" onClick={() => { setSelectedAppointment(null); setIsModalOpen(true); }}>
+        <Button variant="black" onClick={() => { setSelectedAppointment(null); setIsModalOpen(true); }} className="w-full sm:w-auto">
            <Plus size={18} className="mr-2" /> Yeni Randevu
         </Button>
       </div>
@@ -106,45 +101,33 @@ export const AppointmentsPage = () => {
       {/* Filter Bar */}
       <Card className="p-4 bg-slate-50 border border-slate-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             {/* Status Filter */}
-             <div>
-                <Select 
-                    value={statusFilter} 
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-white border-slate-200"
-                >
-                    <option value="all">Tüm Durumlar</option>
-                    <option value="confirmed">Onaylı</option>
-                    <option value="pending">Bekliyor</option>
-                    <option value="completed">Tamamlandı</option>
-                    <option value="cancelled">İptal</option>
-                </Select>
-             </div>
+             <Select 
+                 value={statusFilter} 
+                 onChange={(e) => setStatusFilter(e.target.value)}
+                 className="bg-white border-slate-200"
+             >
+                 <option value="all">Tüm Durumlar</option>
+                 <option value="confirmed">Onaylı</option>
+                 <option value="pending">Bekliyor</option>
+                 <option value="completed">Tamamlandı</option>
+                 <option value="cancelled">İptal</option>
+             </Select>
 
-             {/* Staff Filter */}
-             <div>
-                <Select
-                    value={staffFilter}
-                    onChange={(e) => setStaffFilter(e.target.value)}
-                    className="bg-white border-slate-200"
-                >
-                    <option value="all">Tüm Personel</option>
-                    {staff.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </Select>
-             </div>
+             <Select
+                 value={staffFilter}
+                 onChange={(e) => setStaffFilter(e.target.value)}
+                 className="bg-white border-slate-200"
+             >
+                 <option value="all">Tüm Personel</option>
+                 {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+             </Select>
 
-              {/* Date Filter */}
-             <div>
-                <DatePicker 
-                    value={dateFilter}
-                    onChange={setDateFilter}
-                    placeholder="Tüm Zamanlar"
-                />
-             </div>
+             <DatePicker 
+                 value={dateFilter}
+                 onChange={setDateFilter}
+                 placeholder="Tüm Zamanlar"
+             />
 
-             {/* Search */}
              <div className="relative">
                 <Input 
                     placeholder="Ara..." 
@@ -168,14 +151,16 @@ export const AppointmentsPage = () => {
           )}
       </Card>
 
-      {/* Table Section */}
-      <Card className="overflow-hidden border border-slate-200 shadow-sm p-0">
+      {/* --- CONTENT AREA --- */}
+      
+      {/* 1. Desktop Table View (Hidden on Mobile) */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
          <div className="overflow-x-auto">
              <table className="w-full text-sm text-left">
                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                      <tr>
                          <th className="px-6 py-4">Müşteri</th>
-                         <th className="px-6 py-4">Telefon Numarası</th>
+                         <th className="px-6 py-4">Telefon</th>
                          <th className="px-6 py-4">Hizmetler</th>
                          <th className="px-6 py-4">Tarih</th>
                          <th className="px-6 py-4">Saat</th>
@@ -191,35 +176,17 @@ export const AppointmentsPage = () => {
                              const staffMember = getStaff(apt.staffId);
                              return (
                                  <tr key={apt.id} className="hover:bg-slate-50 transition-colors group">
-                                     <td className="px-6 py-4 font-medium text-slate-900">
-                                         {customer?.name}
-                                     </td>
-                                     <td className="px-6 py-4 text-slate-600 font-mono">
-                                         {formatPhoneNumber(customer?.phone || "")}
-                                     </td>
-                                     <td className="px-6 py-4 text-slate-600">
-                                         {getServices(apt.serviceIds)}
-                                     </td>
-                                     <td className="px-6 py-4 text-slate-600">
-                                         {format(parseISO(apt.date), 'dd.MM.yyyy')}
-                                     </td>
-                                     <td className="px-6 py-4 text-slate-600 font-medium">
-                                         {apt.startTime}
-                                     </td>
-                                     <td className="px-6 py-4">
-                                         {getStatusBadge(apt.status)}
-                                     </td>
-                                     <td className="px-6 py-4 text-slate-600">
-                                         {staffMember?.name}
-                                     </td>
+                                     <td className="px-6 py-4 font-medium text-slate-900">{customer?.name}</td>
+                                     <td className="px-6 py-4 text-slate-600 font-mono">{formatPhoneNumber(customer?.phone || "")}</td>
+                                     <td className="px-6 py-4 text-slate-600">{getServices(apt.serviceIds)}</td>
+                                     <td className="px-6 py-4 text-slate-600">{format(parseISO(apt.date), 'dd.MM.yyyy')}</td>
+                                     <td className="px-6 py-4 text-slate-600 font-medium">{apt.startTime}</td>
+                                     <td className="px-6 py-4">{getStatusBadge(apt.status)}</td>
+                                     <td className="px-6 py-4 text-slate-600">{staffMember?.name}</td>
                                      <td className="px-6 py-4 text-right">
                                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <button onClick={() => handleEdit(apt)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded text-slate-600">
-                                                 <Edit2 size={14} />
-                                             </button>
-                                             <button onClick={() => handleDelete(apt.id)} className="p-2 bg-red-50 hover:bg-red-100 rounded text-red-600">
-                                                 <Trash2 size={14} />
-                                             </button>
+                                             <button onClick={() => handleEdit(apt)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded text-slate-600"><Edit2 size={14} /></button>
+                                             <button onClick={() => handleDelete(apt.id)} className="p-2 bg-red-50 hover:bg-red-100 rounded text-red-600"><Trash2 size={14} /></button>
                                          </div>
                                      </td>
                                  </tr>
@@ -227,59 +194,122 @@ export const AppointmentsPage = () => {
                          })
                      ) : (
                          <tr>
-                             <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
-                                 <div className="flex flex-col items-center">
-                                     <Filter size={32} className="mb-2 opacity-50" />
-                                     <p>Kayıt bulunamadı.</p>
-                                 </div>
-                             </td>
+                             <td colSpan={8} className="px-6 py-12 text-center text-slate-400">Kayıt bulunamadı.</td>
                          </tr>
                      )}
                  </tbody>
              </table>
          </div>
+      </div>
 
-         {/* Footer / Pagination */}
-         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-             <div className="text-sm text-slate-500">
-                 {filteredData.length} kayıttan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} arası gösteriliyor
-             </div>
-             
-             <div className="flex items-center gap-1">
-                <Button 
-                    variant="outline" 
-                    className="h-8 px-3 text-xs" 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                >
-                    Önceki
-                </Button>
-                
+      {/* 2. Mobile Card View (Hidden on Desktop) */}
+      <div className="md:hidden space-y-4">
+         {displayedData.length > 0 ? (
+             displayedData.map((apt) => {
+                const customer = getCustomer(apt.customerId);
+                const staffMember = getStaff(apt.staffId);
+                return (
+                    <div key={apt.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col gap-3">
+                        {/* Header: Customer & Status */}
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
+                                    {customer?.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div className="font-bold text-slate-900">{customer?.name}</div>
+                                    <div className="text-xs text-slate-500 font-mono">{formatPhoneNumber(customer?.phone || "")}</div>
+                                </div>
+                            </div>
+                            {getStatusBadge(apt.status)}
+                        </div>
+
+                        <hr className="border-slate-100" />
+
+                        {/* Body: Details */}
+                        <div className="grid grid-cols-2 gap-y-3 text-sm">
+                             <div className="col-span-2 flex items-center gap-2 text-slate-700">
+                                 <Scissors size={16} className="text-slate-400" />
+                                 <span className="font-medium">{getServices(apt.serviceIds)}</span>
+                             </div>
+                             <div className="flex items-center gap-2 text-slate-600">
+                                 <Calendar size={16} className="text-slate-400" />
+                                 {format(parseISO(apt.date), 'd MMM', {locale: tr})}
+                             </div>
+                             <div className="flex items-center gap-2 text-slate-600">
+                                 <Clock size={16} className="text-slate-400" />
+                                 {apt.startTime}
+                             </div>
+                             <div className="col-span-2 flex items-center gap-2 text-slate-600">
+                                 <User size={16} className="text-slate-400" />
+                                 {staffMember?.name}
+                             </div>
+                        </div>
+
+                        {/* Footer: Price & Actions */}
+                        <div className="flex items-center justify-between pt-2 mt-1 border-t border-slate-100">
+                            <div className="font-bold text-lg text-slate-900">{apt.totalPrice} ₺</div>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleEdit(apt)} className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600">
+                                    <Edit2 size={16} />
+                                </button>
+                                <button onClick={() => handleDelete(apt.id)} className="p-2 bg-red-50 border border-red-100 rounded-lg text-red-500">
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+             })
+         ) : (
+            <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
+                Kayıt bulunamadı.
+            </div>
+         )}
+      </div>
+
+      {/* Pagination (Common) */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-500">
+                {filteredData.length} kayıttan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} arası
+            </div>
+            
+            <div className="flex items-center gap-1">
+            <Button 
+                variant="outline" 
+                className="h-8 px-3 text-xs" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
+                Önceki
+            </Button>
+            
+            <div className="hidden sm:flex gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                     <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
                             currentPage === page 
-                                ? 'bg-black text-white'  // Updated to Black
+                                ? 'bg-black text-white' 
                                 : 'text-slate-600 hover:bg-slate-200'
                         }`}
                     >
                         {page}
                     </button>
                 ))}
+            </div>
 
-                <Button 
-                    variant="outline" 
-                    className="h-8 px-3 text-xs" 
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                >
-                    Sonraki
-                </Button>
-             </div>
-         </div>
-      </Card>
+            <Button 
+                variant="outline" 
+                className="h-8 px-3 text-xs" 
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
+                Sonraki
+            </Button>
+            </div>
+      </div>
 
       <AppointmentModal 
         isOpen={isModalOpen} 

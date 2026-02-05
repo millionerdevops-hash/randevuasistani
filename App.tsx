@@ -32,12 +32,12 @@ const ProtectedLayout = () => {
       <Sidebar />
       {/* 
          Adjusted left margin:
-         - Default collapsed: md:ml-20 (80px)
-         - Expanded: md:ml-64 (256px)
-         - Transition matches Sidebar transition
+         - Mobile: ml-0 (Sidebar is hidden/overlay)
+         - Desktop Collapsed: md:ml-20
+         - Desktop Expanded: md:ml-64
       */}
       <main 
-        className={`flex-1 flex flex-col h-full transition-all duration-300 ease-in-out ${
+        className={`flex-1 flex flex-col h-full transition-all duration-300 ease-in-out w-full ${
           isSidebarExpanded ? 'md:ml-64' : 'md:ml-20'
         }`}
       >
